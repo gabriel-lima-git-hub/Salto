@@ -14929,6 +14929,27 @@ export const DICIONARIO: Traducoes = {
   "A IA monta a proposta pelos modelos da empresa e o PDF sai pelo WhatsApp.": { es: "La IA arma la propuesta con las plantillas de la empresa y el PDF sale por WhatsApp." },
   "Cadastro de empresas por CNPJ, das pessoas que decidem nelas e importação de planilha.": { es: "Registro de empresas por CNPJ, de las personas que deciden en ellas e importación de planillas." },
   "Contratos de honorários com parcelas e o controle do que já foi pago.": { es: "Contratos de honorarios con cuotas y el control de lo que ya se pagó." },
+  "Agenda de avaliação": { es: "Agenda de evaluación" },
+  "Agendamentos de avaliação veicular com unidades, consultores e status na rota Agenda.": {
+    es: "Citas de evaluación de vehículos con unidades, asesores y estado en la ruta Agenda.",
+  },
+  "Agendamentos de avaliação — horários, unidades, consultores e status da operação.": {
+    es: "Citas de evaluación — horarios, unidades, asesores y estado de la operación.",
+  },
+  "Horários, unidades e status da operação veicular.": {
+    es: "Horarios, unidades y estado de la operación vehicular.",
+  },
+  "Veículo": { es: "Vehículo" },
+  "Iniciar avaliação": { es: "Iniciar evaluación" },
+  "O assistente de avaliação completo chegará em uma próxima entrega. Agora o status passa para \"Em avaliação\" e o vínculo com o agendamento": {
+    es: "El asistente de evaluación completo llegará en una próxima entrega. Ahora el estado pasa a \"En evaluación\" y el vínculo con la cita",
+  },
+  "fica registrado.": { es: "queda registrado." },
+  "Copiar confirmação": { es: "Copiar confirmación" },
+  "Reverter para agendado": { es: "Revertir a programado" },
+  "Esta ação é irreversível. O agendamento será removido permanentemente.": {
+    es: "Esta acción es irreversible. La cita se eliminará permanentemente.",
+  },
   // #1907 item 4 — a linha do módulo `financeiro` em `MODULOS_OPCIONAIS`
   // (`lib/recursos-opcionais/catalogo.ts:124`). Enquanto faltava, o módulo
   // entrava na lista nova pelo TEXTO_DO_MODULO sem nenhuma linha aqui.

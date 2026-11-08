@@ -187,16 +187,9 @@ export const NAV_CATALOG = [
   {
     // Entra em "atendimento", e não em "organizacao", porque a Agenda é onde o
     // dia acontece e não onde ele se configura: quem atende abre isto de manhã
-    // junto com o Inbox. Os TIPOS de agendamento — que são configuração de
-    // verdade — foram para Configurações, como este comentário previa: ver
-    // `/app/settings/tenant/agenda` no grupo "organizacao".
-    //
-    // ⚠️ ESTA FRASE ESTAVA VENCIDA: dizia "a disponibilidade ainda não tem tela",
-    // e tem — é a aba "Atendimento" de `/app/team`, com editor de fuso e janelas
-    // (`app/app/team/_components/AttendantsClient.tsx`). Ela chegou a custar uma
-    // investigação inteira: quem leu isto aqui concluiu que faltava construir a
-    // tela, quando o que faltava era o CAMINHO até ela. O aviso da Agenda agora
-    // aponta para `/app/team?aba=atendimento`.
+    // junto com o Inbox. Com o módulo `avaliacao` ligado, a mesma rota
+    // `/app/agenda` mostra a agenda de avaliação veicular; desligado, continua
+    // a agenda de compromissos e Google Calendar (ver `app/app/agenda/page.tsx`).
     href: "/app/agenda",
     label: "Agenda",
     description: "O que está marcado, com quem, e quem atende — seu e da equipe.",
