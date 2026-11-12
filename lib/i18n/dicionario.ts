@@ -15691,6 +15691,36 @@ export const DICIONARIO: Traducoes = {
   "A conversa abriu, mas a primeira mensagem não pôde ser enviada.": {
     es: "La conversación se abrió, pero el primer mensaje no se pudo enviar.",
   },
+
+  // Agenda › Avaliação — alerta sem unidades + formulário de agendamento
+  "Sem unidade cadastrada": { es: "No hay ninguna unidad registrada" },
+  "O agendamento exige uma unidade (loja). Enquanto a lista de unidades estiver vazia, o servidor devolve": {
+    es: "La cita exige una unidad (tienda). Mientras la lista de unidades esté vacía, el servidor devuelve",
+  },
+  "e nada é gravado.": { es: "y no se guarda nada." },
+  "Nome da unidade": { es: "Nombre de la unidad" },
+  "Ex.: Matriz": { es: "Ej.: Matriz" },
+  "Unidade criada. Agora você pode salvar o agendamento.": {
+    es: "Unidad creada. Ahora puedes guardar la cita.",
+  },
+  "Criar unidade": { es: "Crear unidad" },
+  "Peça a um gestor ou administrador para cadastrar a primeira unidade.": {
+    es: "Pide a un gestor o administrador que registre la primera unidad.",
+  },
+  "Nenhuma unidade ativa — crie uma antes de salvar.": {
+    es: "Ninguna unidad activa — crea una antes de guardar.",
+  },
+  "Editar agendamento": { es: "Editar cita" },
+  WhatsApp: { es: "WhatsApp" },
+  "E-mail (opcional)": { es: "Correo (opcional)" },
+  "Cadastre uma unidade acima": { es: "Registra una unidad arriba" },
+  Selecione: { es: "Selecciona" },
+  "Distribuir consultor automaticamente": { es: "Distribuir consultor automáticamente" },
+  Consultor: { es: "Consultor" },
+  "Atendente (opcional)": { es: "Asesor (opcional)" },
+  Opcional: { es: "Opcional" },
+  Placa: { es: "Placa" },
+  "Agendamento atualizado.": { es: "Cita actualizada." },
 };
 
 /**
