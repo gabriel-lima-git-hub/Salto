@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { format } from "date-fns";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -43,12 +44,15 @@ export function FormularioAgendamento({
   edicao,
   unidades,
   aoSalvar,
+  onAgendamentoSalvo,
 }: {
   aberto: boolean;
   onAbertoChange: (v: boolean) => void;
   edicao: AgendamentoAvaliacao | null;
   unidades: UnidadeAvaliacao[];
   aoSalvar?: () => void;
+  /** Leva a agenda para a semana do horário salvo (evita lista “vazia” fora do filtro). */
+  onAgendamentoSalvo?: (scheduledAtIso: string) => void;
 }) {
   const t = useT();
   const qc = useQueryClient();
@@ -82,7 +86,7 @@ export function FormularioAgendamento({
       setConsultantId(edicao.consultant_user_id ?? "");
       setAttendantId(edicao.attendant_user_id ?? "");
       const quando = new Date(edicao.scheduled_at);
-      setData(quando.toISOString().slice(0, 10));
+      setData(format(quando, "yyyy-MM-dd"));
       setHora(
         `${String(quando.getHours()).padStart(2, "0")}:${String(quando.getMinutes()).padStart(2, "0")}`,
       );
@@ -98,8 +102,7 @@ export function FormularioAgendamento({
       setConsultantAuto(true);
       setConsultantId("");
       setAttendantId("");
-      const hoje = new Date();
-      setData(hoje.toISOString().slice(0, 10));
+      setData(format(new Date(), "yyyy-MM-dd"));
       setHora("09:00");
       setPlaca("");
       setMarca("");
@@ -117,16 +120,25 @@ export function FormularioAgendamento({
   const salvar = useMutation({
     mutationFn: async () => {
       if (!unitId) throw new Error("Selecione a unidade.");
-      const scheduledAt = new Date(`${data}T${hora}:00`).toISOString();
-      const corpo = {
+      if (!telefone.trim() || !nome.trim()) {
+        throw new Error("Informe WhatsApp e nome do cliente.");
+      }
+      if (!data || !hora) {
+        throw new Error("Informe data e horário do agendamento.");
+      }
+      const quando = new Date(`${data}T${hora}:00`);
+      if (Number.isNaN(quando.getTime())) {
+        throw new Error("Data ou horário inválidos.");
+      }
+      const scheduledAt = quando.toISOString();
+      // Só colunas de `avaliacao_agendamentos` (+ updated_at no servidor).
+      // `client_name` / `client_phone` / `consultant_auto` NÃO entram no PATCH:
+      // não existem na tabela e o PostgREST recusa com PGRST204.
+      const persistivel = {
         unit_id: unitId,
         scheduled_at: scheduledAt,
         duration_minutes: 20,
-        client_name: nome.trim() || undefined,
-        client_phone: telefone.trim() || undefined,
         client_email: email.trim() || undefined,
-        contact_id: contatoLookup.data?.id,
-        consultant_auto: consultantAuto,
         consultant_user_id: consultantAuto ? null : consultantId || null,
         attendant_user_id: attendantId || null,
         vehicle_plate: placa.trim() || undefined,
@@ -136,51 +148,73 @@ export function FormularioAgendamento({
       };
 
       if (edicao) {
-        await apiClient.patch(`/api/v1/avaliacao/agendamentos/${edicao.id}`, corpo);
-      } else {
-        await apiClient.post("/api/v1/avaliacao/agendamentos", corpo);
+        await apiClient.patch(`/api/v1/avaliacao/agendamentos/${edicao.id}`, persistivel);
+        return scheduledAt;
       }
+      await apiClient.post("/api/v1/avaliacao/agendamentos", {
+        ...persistivel,
+        client_name: nome.trim(),
+        client_phone: telefone.trim(),
+        contact_id: contatoLookup.data?.id,
+        consultant_auto: consultantAuto,
+      });
+      return scheduledAt;
     },
-    onSuccess: () => {
+    onSuccess: (scheduledAt) => {
       void qc.invalidateQueries({ queryKey: ["avaliacao", "agendamentos"] });
-      toast.success(edicao ? "Agendamento atualizado." : "Agendamento criado.");
+      toast.success(edicao ? t("Agendamento atualizado.") : t("Agendamento criado."));
+      onAgendamentoSalvo?.(scheduledAt);
       onAbertoChange(false);
       aoSalvar?.();
     },
-    onError: showApiError,
+    onError: (err) => {
+      // Erros locais (unidade/nome/telefone) são `Error` puro; erros da API são
+      // `ApiError` e passam por `showApiError` para preservar código + request id.
+      if (err instanceof Error && err.name !== "ApiError") {
+        toast.error(err.message);
+        return;
+      }
+      showApiError(err);
+    },
   });
 
   return (
     <Sheet open={aberto} onOpenChange={onAbertoChange}>
       <SheetContent className="flex w-full flex-col overflow-y-auto sm:max-w-lg">
         <SheetHeader>
-          <SheetTitle>{edicao ? "Editar agendamento" : "Novo agendamento"}</SheetTitle>
+          <SheetTitle>{edicao ? t("Editar agendamento") : t("Novo agendamento")}</SheetTitle>
         </SheetHeader>
 
         <div className="flex flex-1 flex-col gap-6 py-4">
           <section className="space-y-3">
-            <h3 className="text-sm font-medium">Cliente</h3>
+            <h3 className="text-sm font-medium">{t("Cliente")}</h3>
             <div className="space-y-2">
-              <Label htmlFor="av-telefone">WhatsApp</Label>
+              <Label htmlFor="av-telefone">{t("WhatsApp")}</Label>
               <Input id="av-telefone" value={telefone} onChange={(e) => setTelefone(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="av-nome">Nome</Label>
+              <Label htmlFor="av-nome">{t("Nome")}</Label>
               <Input id="av-nome" value={nome} onChange={(e) => setNome(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="av-email">E-mail (opcional)</Label>
+              <Label htmlFor="av-email">{t("E-mail (opcional)")}</Label>
               <Input id="av-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
           </section>
 
           <section className="space-y-3">
-            <h3 className="text-sm font-medium">Agendamento</h3>
+            <h3 className="text-sm font-medium">{t("Agendamento")}</h3>
             <div className="space-y-2">
-              <Label>Unidade</Label>
-              <Select value={unitId} onValueChange={setUnitId}>
+              <Label>{t("Unidade")}</Label>
+              <Select value={unitId} onValueChange={setUnitId} disabled={unidades.filter((u) => u.is_active).length === 0}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione" />
+                  <SelectValue
+                    placeholder={
+                      unidades.filter((u) => u.is_active).length === 0
+                        ? t("Cadastre uma unidade acima")
+                        : t("Selecione")
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {unidades
@@ -192,10 +226,15 @@ export function FormularioAgendamento({
                     ))}
                 </SelectContent>
               </Select>
+              {unidades.filter((u) => u.is_active).length === 0 ? (
+                <p className="text-xs text-destructive">
+                  {t("Nenhuma unidade ativa — crie uma antes de salvar.")}
+                </p>
+              ) : null}
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-2">
-                <Label htmlFor="av-data">Data</Label>
+                <Label htmlFor="av-data">{t("Data")}</Label>
                 <Input id="av-data" type="date" value={data} onChange={(e) => setData(e.target.value)} />
               </div>
               <div className="space-y-2">
@@ -204,7 +243,7 @@ export function FormularioAgendamento({
               </div>
             </div>
             <div className="flex items-center justify-between gap-2">
-              <Label htmlFor="av-consultor-auto">Distribuir consultor automaticamente</Label>
+              <Label htmlFor="av-consultor-auto">{t("Distribuir consultor automaticamente")}</Label>
               <Switch
                 id="av-consultor-auto"
                 checked={consultantAuto}
@@ -213,10 +252,10 @@ export function FormularioAgendamento({
             </div>
             {!consultantAuto && (
               <div className="space-y-2">
-                <Label>Consultor</Label>
+                <Label>{t("Consultor")}</Label>
                 <Select value={consultantId} onValueChange={setConsultantId}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione" />
+                    <SelectValue placeholder={t("Selecione")} />
                   </SelectTrigger>
                   <SelectContent>
                     {membros.data?.map((m) => (
@@ -229,7 +268,7 @@ export function FormularioAgendamento({
               </div>
             )}
             <div className="space-y-2">
-              <Label>Atendente (opcional)</Label>
+              <Label>{t("Atendente (opcional)")}</Label>
               <Select value={attendantId || "_none"} onValueChange={(v) => setAttendantId(v === "_none" ? "" : v)}>
                 <SelectTrigger>
                   <SelectValue placeholder={t("Nenhum")} />
@@ -249,10 +288,10 @@ export function FormularioAgendamento({
           <section className="space-y-3">
             <h3 className="text-sm font-medium">{t("Veículo")}</h3>
             <div className="space-y-2">
-              <Label>Marca</Label>
+              <Label>{t("Marca")}</Label>
               <Select value={marca || "_none"} onValueChange={(v) => setMarca(v === "_none" ? "" : v)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Opcional" />
+                  <SelectValue placeholder={t("Opcional")} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="_none">—</SelectItem>
@@ -265,11 +304,11 @@ export function FormularioAgendamento({
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="av-modelo">Modelo</Label>
+              <Label htmlFor="av-modelo">{t("Modelo")}</Label>
               <Input id="av-modelo" value={modelo} onChange={(e) => setModelo(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="av-placa">Placa</Label>
+              <Label htmlFor="av-placa">{t("Placa")}</Label>
               <Input id="av-placa" value={placa} onChange={(e) => setPlaca(e.target.value.toUpperCase())} />
             </div>
           </section>
@@ -282,10 +321,10 @@ export function FormularioAgendamento({
 
         <SheetFooter className="gap-2 sm:gap-0">
           <Button type="button" variant="outline" onClick={() => onAbertoChange(false)}>
-            Cancelar
+            {t("Cancelar")}
           </Button>
           <Button type="button" onClick={() => salvar.mutate()} disabled={salvar.isPending}>
-            {salvar.isPending ? "Salvando…" : "Salvar"}
+            {salvar.isPending ? t("Salvando…") : t("Salvar")}
           </Button>
         </SheetFooter>
       </SheetContent>
