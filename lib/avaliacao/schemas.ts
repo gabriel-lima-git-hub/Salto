@@ -34,17 +34,25 @@ export const criarAgendamentoSchema = agendamentoCorpoSchema.superRefine((v, ctx
  * `avaliacao_agendamentos` — se entrarem no `.update()`, o PostgREST responde
  * `PGRST204` ("Could not find the 'consultant_auto' column…") e a edição falha
  * depois do formulário ter enviado o mesmo corpo do POST.
+ *
+ * No Zod 4, `.partial()` **mantém** `.default()` de cada campo. Sem
+ * `removeDefault()` em `duration_minutes`, `safeParse({})` devolve
+ * `{ duration_minutes: 20 }` e o `.refine` de corpo vazio passa — e o PATCH
+ * regravaria a duração que o cliente nem mandou (mesmo defeito de
+ * `agentConfigPatchSchema` em `lib/ai/guardrails-schema.ts`).
  */
-export const atualizarAgendamentoSchema = agendamentoCorpoSchema
-  .omit({
-    client_name: true,
-    client_phone: true,
-    consultant_auto: true,
-  })
-  .partial()
+const corpoParaPatch = agendamentoCorpoSchema.omit({
+  client_name: true,
+  client_phone: true,
+  consultant_auto: true,
+});
+
+export const atualizarAgendamentoSchema = corpoParaPatch
   .extend({
+    duration_minutes: corpoParaPatch.shape.duration_minutes.removeDefault(),
     status: z.enum(STATUS_AVALIACAO).optional(),
   })
+  .partial()
   .refine((v) => Object.keys(v).length > 0, { message: "Nenhum campo para atualizar." });
 
 export const listarAgendamentosSchema = z.object({
