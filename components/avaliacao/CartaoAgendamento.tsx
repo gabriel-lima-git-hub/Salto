@@ -4,7 +4,9 @@ import { format } from "date-fns";
 
 import { Badge } from "@/components/ui/badge";
 import { useLocaleDeData } from "@/hooks/i18n/useLocaleDeData";
+import { useT } from "@/hooks/i18n/useT";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAssignableMembers } from "@/hooks/inbox/useAssignableMembers";
 import { ROTULO_STATUS } from "@/lib/avaliacao/status";
 import { cn } from "@/lib/utils";
 
@@ -32,29 +34,48 @@ export function CartaoAgendamento({
   item: AgendamentoAvaliacao;
   onEditar: () => void;
 }) {
+  const t = useT();
   const localeDaData = useLocaleDeData();
+  const membros = useAssignableMembers(true);
   const contato = embed(item.contacts);
   const unidade = embed(item.avaliacao_unidades);
   const quando = format(new Date(item.scheduled_at), "EEE, dd/MM · HH:mm", { locale: localeDaData });
+
+  const nomeDe = (userId: string | null) => {
+    if (!userId) return "—";
+    const m = membros.data?.find((x) => x.user_id === userId);
+    return m?.full_name ?? userId.slice(0, 8);
+  };
 
   return (
     <Card className="overflow-hidden">
       <CardHeader className="flex flex-row items-start justify-between gap-2 space-y-0 pb-2">
         <div className="min-w-0 space-y-1">
-          <CardTitle className="truncate text-base">{contato?.name ?? "Cliente"}</CardTitle>
+          <CardTitle className="truncate text-base">{contato?.name ?? t("Cliente")}</CardTitle>
           <p className="text-sm text-muted-foreground">{quando}</p>
         </div>
         <div className="flex items-center gap-2">
           <Badge className={cn("shrink-0 border-0", COR_STATUS[item.status])} variant="secondary">
-            {ROTULO_STATUS[item.status]}
+            {t(ROTULO_STATUS[item.status])}
           </Badge>
           <MenuAcoesAgendamento agendamento={item} onEditar={onEditar} />
         </div>
       </CardHeader>
       <CardContent className="grid gap-1 text-sm">
-        <p>{contato?.phone_number ?? "—"}</p>
         <p>
-          <span className="text-muted-foreground">Unidade:</span> {unidade?.name ?? "—"}
+          <span className="text-muted-foreground">{t("WhatsApp")}:</span>{" "}
+          {contato?.phone_number ?? "—"}
+        </p>
+        <p>
+          <span className="text-muted-foreground">{t("Unidade")}:</span> {unidade?.name ?? "—"}
+        </p>
+        <p>
+          <span className="text-muted-foreground">{t("Consultor")}:</span>{" "}
+          {nomeDe(item.consultant_user_id)}
+        </p>
+        <p>
+          <span className="text-muted-foreground">{t("Atendente")}:</span>{" "}
+          {nomeDe(item.attendant_user_id)}
         </p>
         {[item.vehicle_brand, item.vehicle_model, item.vehicle_plate].filter(Boolean).length > 0 && (
           <p className="text-muted-foreground">

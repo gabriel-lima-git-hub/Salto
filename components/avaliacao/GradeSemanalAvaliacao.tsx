@@ -18,7 +18,8 @@ const PASSO_MIN = 20;
 
 function slotsDoDia(): number[] {
   const slots: number[] = [];
-  for (let m = INICIO_MIN; m < FIM_MIN; m += PASSO_MIN) slots.push(m);
+  // Inclui 18:40 como último horário (Avaliasys: 09:00–18:40 / 20 min).
+  for (let m = INICIO_MIN; m <= FIM_MIN; m += PASSO_MIN) slots.push(m);
   return slots;
 }
 
@@ -41,11 +42,14 @@ export function GradeSemanalAvaliacao({
   agendamentos,
   fuso,
   onSelecionar,
+  onNovoNoHorario,
 }: {
   ancoraSemana: Date;
   agendamentos: AgendamentoAvaliacao[];
   fuso: string | null;
   onSelecionar: (id: string) => void;
+  /** Clique em célula vazia: abre novo agendamento naquele dia/horário. */
+  onNovoNoHorario?: (quandoLocalIsoDate: string, horaHm: string) => void;
 }) {
   const t = useT();
   const localeDaData = useLocaleDeData();
@@ -58,7 +62,7 @@ export function GradeSemanalAvaliacao({
   for (const ag of agendamentos) {
     const { dia, minuto } = minutoNoFuso(ag.scheduled_at, fusoGrade);
     const slotBase = Math.floor((minuto - INICIO_MIN) / PASSO_MIN) * PASSO_MIN + INICIO_MIN;
-    if (slotBase < INICIO_MIN || slotBase >= FIM_MIN) continue;
+    if (slotBase < INICIO_MIN || slotBase > FIM_MIN) continue;
     const chave = `${format(dia, "yyyy-MM-dd")}-${slotBase}`;
     const lista = porDiaSlot.get(chave) ?? [];
     lista.push(ag);
@@ -95,9 +99,22 @@ export function GradeSemanalAvaliacao({
                 return (
                   <div
                     key={chave}
+                    role={celula.length === 0 && onNovoNoHorario ? "button" : undefined}
+                    tabIndex={celula.length === 0 && onNovoNoHorario ? 0 : undefined}
+                    onClick={() => {
+                      if (celula.length > 0 || !onNovoNoHorario) return;
+                      onNovoNoHorario(format(dia, "yyyy-MM-dd"), rotulo);
+                    }}
+                    onKeyDown={(e) => {
+                      if (celula.length > 0 || !onNovoNoHorario) return;
+                      if (e.key !== "Enter" && e.key !== " ") return;
+                      e.preventDefault();
+                      onNovoNoHorario(format(dia, "yyyy-MM-dd"), rotulo);
+                    }}
                     className={cn(
                       "min-h-[2.75rem] border-b border-l p-0.5",
                       hoje && "bg-primary/5",
+                      celula.length === 0 && onNovoNoHorario && "cursor-pointer hover:bg-accent/40",
                     )}
                   >
                     <div className="flex flex-col gap-0.5">
@@ -105,7 +122,10 @@ export function GradeSemanalAvaliacao({
                         <button
                           key={ag.id}
                           type="button"
-                          onClick={() => onSelecionar(ag.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onSelecionar(ag.id);
+                          }}
                           className="w-full rounded-md border bg-card px-1 py-0.5 text-left text-[10px] leading-tight shadow-sm hover:bg-accent"
                         >
                           <span className="block truncate font-medium">{embedNome(ag)}</span>
