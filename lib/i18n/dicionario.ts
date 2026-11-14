@@ -15721,6 +15721,32 @@ export const DICIONARIO: Traducoes = {
   Opcional: { es: "Opcional" },
   Placa: { es: "Placa" },
   "Agendamento atualizado.": { es: "Cita actualizada." },
+  "Nome, placa ou modelo": { es: "Nombre, placa o modelo" },
+  Agendado: { es: "Agendado" },
+  "Em avaliação": { es: "En evaluación" },
+  Atrasado: { es: "Atrasado" },
+  Avaliado: { es: "Evaluado" },
+  "Confirmação copiada para a área de transferência.": {
+    es: "Confirmación copiada al portapapeles.",
+  },
+  "Marcar aguardando": { es: "Marcar como en espera" },
+  "Excluir agendamento?": { es: "¿Eliminar cita?" },
+  Lista: { es: "Lista" },
+  Semana: { es: "Semana" },
+  "Semana Atual": { es: "Semana actual" },
+  "Data inicial": { es: "Fecha inicial" },
+  "Data final": { es: "Fecha final" },
+  "Este mês": { es: "Este mes" },
+  "Não encontrou?": { es: "¿No encontró?" },
+  "Informe manualmente": { es: "Ingresa manualmente" },
+  "Pesquisar…": { es: "Buscar…" },
+  "Nenhum resultado. Use “Não encontrou?”.": {
+    es: "Ningún resultado. Usa “¿No encontró?”.",
+  },
+  "Selecione a marca primeiro": { es: "Selecciona la marca primero" },
+  "Nenhum modelo na base — use “Não encontrou?”": {
+    es: "Ningún modelo en la base — usa “¿No encontró?”",
+  },
 };
 
 /**

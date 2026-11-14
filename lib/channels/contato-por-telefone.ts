@@ -129,9 +129,21 @@ export async function encontrarContatoPorTelefoneComNome(
   admin: SupabaseClient,
   orgId: string,
   rawPhone: string,
-): Promise<{ id: string; phone_number: string | null; name: string | null } | null> {
-  const linha = await buscarPorVariantes(admin, orgId, rawPhone, "id, phone_number, name");
-  return (linha as { id: string; phone_number: string | null; name: string | null } | null) ?? null;
+): Promise<{
+  id: string;
+  phone_number: string | null;
+  name: string | null;
+  email: string | null;
+} | null> {
+  const linha = await buscarPorVariantes(admin, orgId, rawPhone, "id, phone_number, name, email");
+  return (
+    (linha as {
+      id: string;
+      phone_number: string | null;
+      name: string | null;
+      email: string | null;
+    } | null) ?? null
+  );
 }
 
 /** O contato da mensagem e os gêmeos gravados com a outra grafia do número. */
