@@ -15731,8 +15731,7 @@ export const DICIONARIO: Traducoes = {
   },
   "Marcar aguardando": { es: "Marcar como en espera" },
   "Excluir agendamento?": { es: "¿Eliminar cita?" },
-  Lista: { es: "Lista" },
-  Semana: { es: "Semana" },
+  // "Lista" e "Semana" já existem mais acima no dicionário (mesmo es).
   "Semana Atual": { es: "Semana actual" },
   "Data inicial": { es: "Fecha inicial" },
   "Data final": { es: "Fecha final" },
