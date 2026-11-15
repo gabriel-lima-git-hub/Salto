@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 
 import { ok, fail } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
-import { MARCAS_VEICULOS } from "@/lib/avaliacao/marcas-veiculos";
+import { MARCAS_CATALOGO, MODELOS_POR_MARCA } from "@/lib/avaliacao/catalogo-veiculos";
 import { moduloLigado } from "@/lib/instalacao/modulos";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -17,5 +17,5 @@ export async function GET(_req: NextRequest): Promise<Response> {
   const authz = await requireRole("viewer", { requestId, resource: "avaliacao_agendamentos" });
   if (!authz.ok) return authz.response;
 
-  return ok({ marcas: MARCAS_VEICULOS }, { requestId });
+  return ok({ marcas: MARCAS_CATALOGO, modelos_por_marca: MODELOS_POR_MARCA }, { requestId });
 }

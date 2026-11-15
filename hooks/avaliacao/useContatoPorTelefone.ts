@@ -10,7 +10,14 @@ export function useContatoPorTelefone(phone: string | null) {
     enabled: !!phone && phone.replace(/\D/g, "").length >= 8,
     queryFn: async () => {
       const r = await apiClient.get<{
-        data: { contato: { id: string; name: string; phone_number: string } | null };
+        data: {
+          contato: {
+            id: string;
+            name: string;
+            phone_number: string;
+            email?: string | null;
+          } | null;
+        };
       }>(`/api/v1/avaliacao/contatos/por-telefone?phone=${encodeURIComponent(phone!)}`);
       return r.data.contato;
     },

@@ -34,6 +34,7 @@ export async function GET(req: NextRequest): Promise<Response> {
         id: contato.id,
         name: contato.name,
         phone_number: contato.phone_number,
+        email: contato.email,
       },
     },
     { requestId },

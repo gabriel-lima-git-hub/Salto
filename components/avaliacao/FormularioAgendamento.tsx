@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
@@ -24,8 +24,15 @@ import type { UnidadeAvaliacao } from "@/hooks/avaliacao/useUnidadesAvaliacao";
 import { useT } from "@/hooks/i18n/useT";
 import { useAssignableMembers } from "@/hooks/inbox/useAssignableMembers";
 import { apiClient } from "@/lib/api/client";
-import { MARCAS_VEICULOS } from "@/lib/avaliacao/marcas-veiculos";
+import {
+  ehMarcaDoCatalogo,
+  ehModeloDoCatalogo,
+  marcaCanonica,
+  MARCAS_CATALOGO,
+  modelosDaMarca,
+} from "@/lib/avaliacao/catalogo-veiculos";
 
+import { SeletorCatalogoComManual } from "./SeletorCatalogoComManual";
 import type { AgendamentoAvaliacao } from "./tipos";
 
 function embedContato(item: AgendamentoAvaliacao | null) {
@@ -45,6 +52,8 @@ export function FormularioAgendamento({
   unidades,
   aoSalvar,
   onAgendamentoSalvo,
+  prefillData,
+  prefillHora,
 }: {
   aberto: boolean;
   onAbertoChange: (v: boolean) => void;
@@ -53,6 +62,9 @@ export function FormularioAgendamento({
   aoSalvar?: () => void;
   /** Leva a agenda para a semana do horário salvo (evita lista “vazia” fora do filtro). */
   onAgendamentoSalvo?: (scheduledAtIso: string) => void;
+  /** Prefill ao clicar numa célula vazia da grade semanal. */
+  prefillData?: string;
+  prefillHora?: string;
 }) {
   const t = useT();
   const qc = useQueryClient();
@@ -70,9 +82,12 @@ export function FormularioAgendamento({
   const [placa, setPlaca] = useState("");
   const [marca, setMarca] = useState("");
   const [modelo, setModelo] = useState("");
+  const [marcaManual, setMarcaManual] = useState(false);
+  const [modeloManual, setModeloManual] = useState(false);
   const [notas, setNotas] = useState("");
 
   const contatoLookup = useContatoPorTelefone(telefone);
+  const modelosDisponiveis = useMemo(() => modelosDaMarca(marca), [marca]);
 
   useEffect(() => {
     if (!aberto) return;
@@ -91,8 +106,16 @@ export function FormularioAgendamento({
         `${String(quando.getHours()).padStart(2, "0")}:${String(quando.getMinutes()).padStart(2, "0")}`,
       );
       setPlaca(edicao.vehicle_plate ?? "");
-      setMarca(edicao.vehicle_brand ?? "");
-      setModelo(edicao.vehicle_model ?? "");
+      const brand = edicao.vehicle_brand ?? "";
+      const model = edicao.vehicle_model ?? "";
+      // Compatível com legado: valor fora do catálogo = preenchimento manual.
+      const brandManual = Boolean(brand) && !ehMarcaDoCatalogo(brand);
+      setMarca(brandManual ? brand : (marcaCanonica(brand) ?? ""));
+      setMarcaManual(brandManual);
+      const modelManual =
+        Boolean(model) && !ehModeloDoCatalogo(brandManual ? null : brand, model);
+      setModelo(model);
+      setModeloManual(modelManual);
       setNotas(edicao.notes ?? "");
     } else {
       setNome("");
@@ -102,20 +125,25 @@ export function FormularioAgendamento({
       setConsultantAuto(true);
       setConsultantId("");
       setAttendantId("");
-      setData(format(new Date(), "yyyy-MM-dd"));
-      setHora("09:00");
+      setData(prefillData ?? format(new Date(), "yyyy-MM-dd"));
+      setHora(prefillHora ?? "09:00");
       setPlaca("");
       setMarca("");
       setModelo("");
+      setMarcaManual(false);
+      setModeloManual(false);
       setNotas("");
     }
-  }, [aberto, edicao, unidades]);
+  }, [aberto, edicao, unidades, prefillData, prefillHora]);
 
   useEffect(() => {
-    if (contatoLookup.data && !edicao) {
-      setNome(contatoLookup.data.name);
-    }
-  }, [contatoLookup.data, edicao]);
+    // Na criação e na edição: se o WhatsApp casar com um contato, preenche o que
+    // estiver vazio (não sobrescreve o que a pessoa já digitou).
+    if (!contatoLookup.data) return;
+    const c = contatoLookup.data;
+    setNome((n) => (n.trim() ? n : c.name ?? n));
+    setEmail((e) => (e.trim() ? e : c.email ?? e));
+  }, [contatoLookup.data]);
 
   const salvar = useMutation({
     mutationFn: async () => {
@@ -287,26 +315,49 @@ export function FormularioAgendamento({
 
           <section className="space-y-3">
             <h3 className="text-sm font-medium">{t("Veículo")}</h3>
-            <div className="space-y-2">
-              <Label>{t("Marca")}</Label>
-              <Select value={marca || "_none"} onValueChange={(v) => setMarca(v === "_none" ? "" : v)}>
-                <SelectTrigger>
-                  <SelectValue placeholder={t("Opcional")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="_none">—</SelectItem>
-                  {MARCAS_VEICULOS.map((m) => (
-                    <SelectItem key={m} value={m}>
-                      {m}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="av-modelo">{t("Modelo")}</Label>
-              <Input id="av-modelo" value={modelo} onChange={(e) => setModelo(e.target.value)} />
-            </div>
+            <SeletorCatalogoComManual
+              id="av-marca"
+              rotulo={t("Marca")}
+              valor={marca}
+              manual={marcaManual}
+              opcoes={MARCAS_CATALOGO}
+              onChange={({ valor, manual }) => {
+                setMarca(valor);
+                setMarcaManual(manual);
+                if (manual) {
+                  // Marca fora da base → modelo também entra em modo manual
+                  // (não há lista de modelos para marca inventada).
+                  setModeloManual(true);
+                  return;
+                }
+                // Marca do catálogo: libera a lista de modelos.
+                // Se o modelo atual não pertence à marca nova, limpa.
+                setModeloManual(false);
+                if (!ehModeloDoCatalogo(valor, modelo)) {
+                  setModelo("");
+                }
+              }}
+            />
+            <SeletorCatalogoComManual
+              id="av-modelo"
+              rotulo={t("Modelo")}
+              valor={modelo}
+              manual={modeloManual || marcaManual}
+              travarManual={marcaManual}
+              opcoes={modelosDisponiveis}
+              desabilitado={!marca.trim()}
+              placeholderVazio={
+                !marca.trim()
+                  ? t("Selecione a marca primeiro")
+                  : modelosDisponiveis.length === 0 && !modeloManual && !marcaManual
+                    ? t("Nenhum modelo na base — use “Não encontrou?”")
+                    : t("Opcional")
+              }
+              onChange={({ valor, manual }) => {
+                setModelo(valor);
+                setModeloManual(manual || marcaManual);
+              }}
+            />
             <div className="space-y-2">
               <Label htmlFor="av-placa">{t("Placa")}</Label>
               <Input id="av-placa" value={placa} onChange={(e) => setPlaca(e.target.value.toUpperCase())} />

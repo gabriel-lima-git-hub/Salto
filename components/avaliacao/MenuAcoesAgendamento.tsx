@@ -59,25 +59,25 @@ export function MenuAcoesAgendamento({
           onClick={async () => {
             const texto = await copiarConfirmacao.mutateAsync(agendamento.id);
             await copyToClipboard(texto);
-            toast.success("Confirmação copiada para a área de transferência.");
+            toast.success(t("Confirmação copiada para a área de transferência."));
           }}
         >
           {t("Copiar confirmação")}
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={onEditar}>Editar</DropdownMenuItem>
+        <DropdownMenuItem onClick={onEditar}>{t("Editar")}</DropdownMenuItem>
         {podeCancelar && (
           <DropdownMenuItem onClick={() => acao.mutate({ id: agendamento.id, acao: "cancelar" })}>
-            Cancelar
+            {t("Cancelar")}
           </DropdownMenuItem>
         )}
         {podeReativar && (
           <DropdownMenuItem onClick={() => acao.mutate({ id: agendamento.id, acao: "reativar" })}>
-            Reativar
+            {t("Reativar")}
           </DropdownMenuItem>
         )}
         {podeAguardando && (
           <DropdownMenuItem onClick={() => acao.mutate({ id: agendamento.id, acao: "aguardando" })}>
-            Marcar aguardando
+            {t("Marcar aguardando")}
           </DropdownMenuItem>
         )}
         {podeReverter && (
@@ -98,19 +98,21 @@ export function MenuAcoesAgendamento({
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
-              Excluir
+              {t("Excluir")}
             </DropdownMenuItem>
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Excluir agendamento?</AlertDialogTitle>
+              <AlertDialogTitle>{t("Excluir agendamento?")}</AlertDialogTitle>
               <AlertDialogDescription>
                 {t("Esta ação é irreversível. O agendamento será removido permanentemente.")}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Voltar</AlertDialogCancel>
-              <AlertDialogAction onClick={() => excluir.mutate(agendamento.id)}>Excluir</AlertDialogAction>
+              <AlertDialogCancel>{t("Voltar")}</AlertDialogCancel>
+              <AlertDialogAction onClick={() => excluir.mutate(agendamento.id)}>
+                {t("Excluir")}
+              </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
