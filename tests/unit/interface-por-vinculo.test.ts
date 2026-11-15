@@ -19,19 +19,15 @@ describe("interface por vínculo é apresentação", () => {
     expect(hrefs(null)).toEqual(NAV_CATALOG.map((d) => d.href));
     expect(new Set(NAV_CATALOG.map((d) => d.href)).size).toBe(NAV_CATALOG.length);
   });
-  it("simplificada tem operação e Conexões somente quando papel permite", () => {
-    expect(hrefs(simplified)).toContain("/app/connections");
-    expect(hrefs(simplified, "agent")).not.toContain("/app/connections");
-    expect(hrefs(simplified)).not.toContain("/app/ai/credentials");
+  it("simplificada traz Agenda, Contatos e Casos; sem Inbox/Kanban/Conexões", () => {
     expect(hrefs(simplified)).toEqual(
-      expect.arrayContaining([
-        "/app/inbox",
-        "/app/agenda",
-        "/app/contacts",
-        "/app/kanban",
-        "/app/tasks",
-      ]),
+      expect.arrayContaining(["/app/agenda", "/app/contacts", "/app/ai/cases"]),
     );
+    expect(hrefs(simplified)).not.toContain("/app/inbox");
+    expect(hrefs(simplified)).not.toContain("/app/kanban");
+    expect(hrefs(simplified)).not.toContain("/app/tasks");
+    expect(hrefs(simplified)).not.toContain("/app/connections");
+    expect(hrefs(simplified)).not.toContain("/app/ai/credentials");
   });
   it("admin plataforma também respeita seleção; completa não promove atendente", () => {
     expect(hrefs(simplified, "admin", true)).not.toContain("/app/ai/credentials");

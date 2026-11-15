@@ -51,6 +51,7 @@ import {
   type FiltroAtivasUnidade,
   type UnidadeAvaliacao,
 } from "@/hooks/avaliacao/useUnidadesAvaliacao";
+import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { useT } from "@/hooks/i18n/useT";
 import { ROLE_RANK, type Role } from "@/lib/auth/types";
 import { formatarCnpjUnidade } from "@/lib/avaliacao/cnpj-unidade";
@@ -143,21 +144,22 @@ function paraCorpo(f: FormState): CorpoUnidade {
   };
 }
 
-function formatarData(iso: string): string {
-  try {
-    return new Intl.DateTimeFormat("pt-BR", {
-      dateStyle: "short",
-      timeStyle: "short",
-    }).format(new Date(iso));
-  } catch {
-    return iso;
-  }
-}
-
 export function UnidadesClient() {
   const t = useT();
+  const tagDeIdioma = useTagDeIdioma();
   const org = useActiveOrg();
   const gestor = podeGerir(org?.role);
+
+  function formatarData(iso: string): string {
+    try {
+      return new Intl.DateTimeFormat(tagDeIdioma, {
+        dateStyle: "short",
+        timeStyle: "short",
+      }).format(new Date(iso));
+    } catch {
+      return iso;
+    }
+  }
 
   const [filtro, setFiltro] = useState<FiltroAtivasUnidade>("todas");
   const [buscaInput, setBuscaInput] = useState("");

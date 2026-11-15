@@ -52849,8 +52849,42 @@ begin
     constraint avaliacao_unidades_nome_unico unique (organization_id, name)
   );
 
+  alter table public.avaliacao_unidades add column if not exists cnpj text;
+  alter table public.avaliacao_unidades add column if not exists internal_code text;
+  alter table public.avaliacao_unidades add column if not exists employee_count integer;
+  alter table public.avaliacao_unidades add column if not exists cep text;
+  alter table public.avaliacao_unidades add column if not exists state text;
+  alter table public.avaliacao_unidades add column if not exists city text;
+  alter table public.avaliacao_unidades add column if not exists neighborhood text;
+  alter table public.avaliacao_unidades add column if not exists street text;
+  alter table public.avaliacao_unidades add column if not exists number text;
+  alter table public.avaliacao_unidades add column if not exists complement text;
+  alter table public.avaliacao_unidades add column if not exists phone text;
+  alter table public.avaliacao_unidades add column if not exists email text;
+  alter table public.avaliacao_unidades add column if not exists responsible_name text;
+  alter table public.avaliacao_unidades add column if not exists notes text;
+
+  alter table public.avaliacao_unidades drop constraint if exists avaliacao_unidades_employee_count_check;
+  alter table public.avaliacao_unidades
+    add constraint avaliacao_unidades_employee_count_check
+    check (employee_count is null or employee_count >= 0);
+
+  alter table public.avaliacao_unidades drop constraint if exists avaliacao_unidades_state_check;
+  alter table public.avaliacao_unidades
+    add constraint avaliacao_unidades_state_check
+    check (state is null or state ~ '^[A-Z]{2}$');
+
+  alter table public.avaliacao_unidades drop constraint if exists avaliacao_unidades_cnpj_formato;
+  alter table public.avaliacao_unidades
+    add constraint avaliacao_unidades_cnpj_formato
+    check (cnpj is null or cnpj ~ '^[0-9A-Z]{14}$');
+
   create index if not exists avaliacao_unidades_org_idx
     on public.avaliacao_unidades (organization_id);
+
+  create unique index if not exists avaliacao_unidades_cnpj_unico
+    on public.avaliacao_unidades (organization_id, cnpj)
+    where cnpj is not null;
 
   create table if not exists public.avaliacao_agendamentos (
     id uuid primary key default gen_random_uuid(),
@@ -52977,6 +53011,8 @@ $f$;
 
 revoke execute on function public.fn_avaliacao_provisionar() from public, anon, authenticated;
 grant execute on function public.fn_avaliacao_provisionar() to service_role;
+
+
 
 create or replace function public.trg_avaliacao_status_guard()
 returns trigger
@@ -54016,192 +54052,6 @@ on conflict (id) do update
   set public             = excluded.public,
       file_size_limit    = excluded.file_size_limit,
       allowed_mime_types = excluded.allowed_mime_types;
-
--- ---- avaliação unidades cadastro completo (migration 0676) ----
--- Evolui fn_avaliacao_provisionar: CNPJ/endereço/contato nas unidades; unique
--- parcial de CNPJ; add column if not exists para instalações já provisionadas.
--- O reaplicar abaixo aplica isto em quem já tem o módulo instalado.
-
-create or replace function public.fn_avaliacao_provisionar()
-returns void
-language plpgsql
-security definer
-set search_path = public, pg_temp
-as $f$
-begin
-  create table if not exists public.avaliacao_unidades (
-    id uuid primary key default gen_random_uuid(),
-    organization_id uuid not null references public.organizations(id) on delete cascade,
-    name text not null check (char_length(trim(name)) > 0),
-    sort_order integer not null default 0,
-    is_active boolean not null default true,
-    created_at timestamptz not null default now(),
-    updated_at timestamptz not null default now(),
-    constraint avaliacao_unidades_nome_unico unique (organization_id, name)
-  );
-
-  alter table public.avaliacao_unidades add column if not exists cnpj text;
-  alter table public.avaliacao_unidades add column if not exists internal_code text;
-  alter table public.avaliacao_unidades add column if not exists employee_count integer;
-  alter table public.avaliacao_unidades add column if not exists cep text;
-  alter table public.avaliacao_unidades add column if not exists state text;
-  alter table public.avaliacao_unidades add column if not exists city text;
-  alter table public.avaliacao_unidades add column if not exists neighborhood text;
-  alter table public.avaliacao_unidades add column if not exists street text;
-  alter table public.avaliacao_unidades add column if not exists number text;
-  alter table public.avaliacao_unidades add column if not exists complement text;
-  alter table public.avaliacao_unidades add column if not exists phone text;
-  alter table public.avaliacao_unidades add column if not exists email text;
-  alter table public.avaliacao_unidades add column if not exists responsible_name text;
-  alter table public.avaliacao_unidades add column if not exists notes text;
-
-  alter table public.avaliacao_unidades drop constraint if exists avaliacao_unidades_employee_count_check;
-  alter table public.avaliacao_unidades
-    add constraint avaliacao_unidades_employee_count_check
-    check (employee_count is null or employee_count >= 0);
-
-  alter table public.avaliacao_unidades drop constraint if exists avaliacao_unidades_state_check;
-  alter table public.avaliacao_unidades
-    add constraint avaliacao_unidades_state_check
-    check (state is null or state ~ '^[A-Z]{2}$');
-
-  alter table public.avaliacao_unidades drop constraint if exists avaliacao_unidades_cnpj_formato;
-  alter table public.avaliacao_unidades
-    add constraint avaliacao_unidades_cnpj_formato
-    check (cnpj is null or cnpj ~ '^[0-9A-Z]{14}$');
-
-  create index if not exists avaliacao_unidades_org_idx
-    on public.avaliacao_unidades (organization_id);
-
-  create unique index if not exists avaliacao_unidades_cnpj_unico
-    on public.avaliacao_unidades (organization_id, cnpj)
-    where cnpj is not null;
-
-  create table if not exists public.avaliacao_agendamentos (
-    id uuid primary key default gen_random_uuid(),
-    organization_id uuid not null references public.organizations(id) on delete cascade,
-    contact_id uuid not null references public.contacts(id) on delete restrict,
-    lead_id uuid references public.crm_leads(id) on delete set null,
-    unit_id uuid not null references public.avaliacao_unidades(id) on delete restrict,
-    consultant_user_id uuid references auth.users(id) on delete set null,
-    attendant_user_id uuid references auth.users(id) on delete set null,
-    scheduled_at timestamptz not null,
-    duration_minutes integer not null default 20 check (duration_minutes > 0 and duration_minutes <= 480),
-    client_email text,
-    vehicle_plate text,
-    vehicle_brand text,
-    vehicle_model text,
-    notes text,
-    status text not null default 'agendado'
-      check (status in ('agendado', 'em_avaliacao', 'cancelado', 'atrasado', 'aguardando', 'avaliado')),
-    external_id text,
-    evaluation_started_at timestamptz,
-    cancelled_at timestamptz,
-    evaluated_at timestamptz,
-    evaluation_record_id uuid,
-    created_at timestamptz not null default now(),
-    updated_at timestamptz not null default now(),
-    constraint avaliacao_agendamentos_ext_unico unique (organization_id, external_id)
-  );
-
-  create index if not exists avaliacao_agendamentos_org_scheduled_idx
-    on public.avaliacao_agendamentos (organization_id, scheduled_at);
-  create index if not exists avaliacao_agendamentos_org_status_idx
-    on public.avaliacao_agendamentos (organization_id, status);
-  create index if not exists avaliacao_agendamentos_contact_idx
-    on public.avaliacao_agendamentos (organization_id, contact_id);
-  create index if not exists avaliacao_agendamentos_plate_idx
-    on public.avaliacao_agendamentos (organization_id, vehicle_plate)
-    where vehicle_plate is not null;
-
-  alter table public.avaliacao_unidades enable row level security;
-  drop policy if exists tenant_isolation_avaliacao_unidades_all on public.avaliacao_unidades;
-  drop policy if exists avaliacao_unidades_select on public.avaliacao_unidades;
-  create policy avaliacao_unidades_select
-    on public.avaliacao_unidades
-    for select using (
-      organization_id in (select public.fn_user_org_ids()) or public.fn_is_platform_admin()
-    );
-  drop policy if exists avaliacao_unidades_insert on public.avaliacao_unidades;
-  create policy avaliacao_unidades_insert
-    on public.avaliacao_unidades
-    for insert with check (
-      public.fn_is_platform_admin()
-      or (organization_id in (select public.fn_user_org_ids())
-          and public.fn_role_at_least(organization_id, 'manager'))
-    );
-  drop policy if exists avaliacao_unidades_update on public.avaliacao_unidades;
-  create policy avaliacao_unidades_update
-    on public.avaliacao_unidades
-    for update using (
-      public.fn_is_platform_admin()
-      or (organization_id in (select public.fn_user_org_ids())
-          and public.fn_role_at_least(organization_id, 'manager'))
-    ) with check (
-      public.fn_is_platform_admin()
-      or (organization_id in (select public.fn_user_org_ids())
-          and public.fn_role_at_least(organization_id, 'manager'))
-    );
-  drop policy if exists avaliacao_unidades_delete on public.avaliacao_unidades;
-  create policy avaliacao_unidades_delete
-    on public.avaliacao_unidades
-    for delete using (
-      public.fn_is_platform_admin()
-      or (organization_id in (select public.fn_user_org_ids())
-          and public.fn_role_at_least(organization_id, 'manager'))
-    );
-  revoke all on public.avaliacao_unidades from anon;
-
-  alter table public.avaliacao_agendamentos enable row level security;
-  drop policy if exists tenant_isolation_avaliacao_agendamentos_all on public.avaliacao_agendamentos;
-  drop policy if exists avaliacao_agendamentos_select on public.avaliacao_agendamentos;
-  create policy avaliacao_agendamentos_select
-    on public.avaliacao_agendamentos
-    for select using (
-      organization_id in (select public.fn_user_org_ids()) or public.fn_is_platform_admin()
-    );
-  drop policy if exists avaliacao_agendamentos_insert on public.avaliacao_agendamentos;
-  create policy avaliacao_agendamentos_insert
-    on public.avaliacao_agendamentos
-    for insert with check (
-      public.fn_is_platform_admin()
-      or (organization_id in (select public.fn_user_org_ids())
-          and public.fn_role_at_least(organization_id, 'agent'))
-    );
-  drop policy if exists avaliacao_agendamentos_update on public.avaliacao_agendamentos;
-  create policy avaliacao_agendamentos_update
-    on public.avaliacao_agendamentos
-    for update using (
-      public.fn_is_platform_admin()
-      or (organization_id in (select public.fn_user_org_ids())
-          and public.fn_role_at_least(organization_id, 'agent'))
-    ) with check (
-      public.fn_is_platform_admin()
-      or (organization_id in (select public.fn_user_org_ids())
-          and public.fn_role_at_least(organization_id, 'agent'))
-    );
-  drop policy if exists avaliacao_agendamentos_delete on public.avaliacao_agendamentos;
-  create policy avaliacao_agendamentos_delete
-    on public.avaliacao_agendamentos
-    for delete using (
-      public.fn_is_platform_admin()
-      or (organization_id in (select public.fn_user_org_ids())
-          and public.fn_role_at_least(organization_id, 'manager'))
-    );
-  revoke all on public.avaliacao_agendamentos from anon;
-
-  drop trigger if exists avaliacao_agendamentos_status_guard on public.avaliacao_agendamentos;
-  create trigger avaliacao_agendamentos_status_guard
-    before update on public.avaliacao_agendamentos
-    for each row execute function public.trg_avaliacao_status_guard();
-
-  perform public.fn_avaliacao_declarar_secoes_lgpd();
-  perform public.fn_proteger_modulo_provisionado();
-end;
-$f$;
-
-revoke execute on function public.fn_avaliacao_provisionar() from public, anon, authenticated;
-grant execute on function public.fn_avaliacao_provisionar() to service_role;
 
 -- ---- módulos instalados são reaplicados, depois de toda tabela do núcleo (migration 0340) ----
 --
@@ -55934,3 +55784,120 @@ on conflict (model) do update set
   completion_cents_per_million_tokens = excluded.completion_cents_per_million_tokens,
   notes = excluded.notes,
   superseded_at = null;
+-- ---- menu lateral padrão simplificada (migration 0677) ----
+-- O produto (Salto) nasce com o preset enxuto; completa continua escolhível
+-- em Configurações → Empresa / Equipe. Colunas e funções voltam a gravar
+-- simplificada quando ninguém escolheu destinos.
+
+alter table public.organizations
+  alter column interface_settings set default '{"preset":"simplificada"}'::jsonb;
+
+alter table public.user_organizations
+  alter column interface_settings set default '{"preset":"simplificada"}'::jsonb;
+
+alter table public.team_invites
+  alter column interface_settings set default '{"preset":"simplificada"}'::jsonb;
+
+update public.organizations
+   set interface_settings = '{"preset":"simplificada"}'::jsonb
+ where interface_settings = '{"preset":"completa"}'::jsonb;
+
+update public.user_organizations
+   set interface_settings = '{"preset":"simplificada"}'::jsonb
+ where interface_settings = '{"preset":"completa"}'::jsonb;
+
+update public.team_invites
+   set interface_settings = '{"preset":"simplificada"}'::jsonb
+ where interface_settings = '{"preset":"completa"}'::jsonb
+   and accepted_at is null
+   and revoked_at is null;
+
+create or replace function public.fn_accept_team_invite(
+ p_user uuid, p_org uuid, p_role text, p_invited_by uuid,
+ p_issued_at timestamptz, p_invited_at timestamptz
+) returns jsonb language sql security definer set search_path = public, pg_temp as $$
+ select public.fn_accept_team_invite(p_user,p_org,p_role,p_invited_by,p_issued_at,p_invited_at,'{"preset":"simplificada"}'::jsonb);
+$$;
+revoke all on function public.fn_accept_team_invite(uuid,uuid,text,uuid,timestamptz,timestamptz) from public,anon,authenticated;
+grant execute on function public.fn_accept_team_invite(uuid,uuid,text,uuid,timestamptz,timestamptz) to service_role;
+
+create or replace function public.fn_create_tenant_with_owner(
+  p_actor uuid, p_key uuid, p_request jsonb, p_hash text
+) returns jsonb language plpgsql security definer set search_path = public, pg_temp as $$
+declare
+  prior public.idempotency_keys%rowtype;
+  org public.organizations%rowtype;
+  result jsonb;
+  dono_e_outra_pessoa boolean;
+  v_plano_id uuid;
+  v_trial_dias integer;
+begin
+  if not exists (select 1 from public.platform_admins where user_id = p_actor
+    and revoked_at is null and scope = 'full') then
+    raise exception 'platform_admin_required' using errcode = '42501';
+  end if;
+  perform pg_advisory_xact_lock(hashtextextended(p_actor::text || ':' || p_key::text, 0));
+  select * into prior from public.idempotency_keys
+    where key = p_key::text and endpoint = '/api/v1/admin/tenants:' || p_actor::text
+      and expires_at > now() and tenant_creation_trusted;
+  if found then
+    if prior.request_hash <> decode(p_hash, 'hex') then
+      raise exception 'idempotency_conflict' using errcode = '22023';
+    end if;
+    if prior.response_body->>'id' is distinct from prior.organization_id::text
+      or not exists (select 1 from public.organizations where id = prior.organization_id and created_by = p_actor) then
+      raise exception 'idempotency_provenance_invalid' using errcode = '22023';
+    end if;
+    return prior.response_body || jsonb_build_object('created', false);
+  end if;
+
+  -- 0583: plano da cobrança do revendedor. Com a chave desligada o formulário não
+  -- oferece plano; um plano_id que chegue assim é recusado, em vez de criar uma
+  -- assinatura que nenhuma régua lê. Validado DEPOIS da autorização.
+  v_plano_id := nullif(p_request->>'plano_id', '')::uuid;
+  if v_plano_id is not null then
+    if not public.fn_cobranca_ligada() then
+      raise exception 'cobranca_desligada' using errcode = '22023';
+    end if;
+    select p.trial_dias into v_trial_dias
+      from public.cobranca_planos p
+     where p.id = v_plano_id and p.arquivado_em is null;
+    if not found then
+      raise exception 'plano_invalido' using errcode = '22023';
+    end if;
+  end if;
+
+  -- A MESMA comparação que já decidia `interface_settings`, agora com nome e
+  -- guardada. Era ela que sabia a resposta e não a anotava em lugar nenhum.
+  dono_e_outra_pessoa := lower(p_request->>'owner_email') is distinct from
+    (select lower(email) from auth.users where id = p_actor);
+
+  insert into public.organizations(display_name, slug, legal_name, cnpj, status, settings, created_by)
+    values (p_request->>'display_name', p_request->>'slug', coalesce(nullif(p_request->>'legal_name', ''), p_request->>'display_name'),
+      p_request->>'cnpj', 'active',
+      -- 0583: com a cobrança ligada a rota não manda `plan`; sem esta guarda a org
+      -- nasceria com {"plan": null} e o rótulo antigo apareceria como "—".
+      case when p_request ? 'plan' then jsonb_build_object('plan', p_request->>'plan') else '{}'::jsonb end,
+      p_actor)
+    returning * into org;
+  insert into public.user_organizations(organization_id, user_id, role, accepted_at, interface_settings, provisional_until_handover)
+    values (org.id, p_actor, 'admin', now(),
+      case when dono_e_outra_pessoa
+        then '{"preset":"simplificada"}'::jsonb
+        else coalesce(p_request->'owner_interface_settings', '{"preset":"simplificada"}'::jsonb) end,
+      dono_e_outra_pessoa);
+  -- 0583: a assinatura nasce na MESMA transação da organização.
+  if v_plano_id is not null then
+    insert into public.cobranca_assinaturas (organization_id, plano_id, estado, trial_ate)
+      values (org.id, v_plano_id, 'trial', now() + make_interval(days => v_trial_dias));
+  end if;
+  result := jsonb_build_object('id', org.id, 'slug', org.slug, 'display_name', org.display_name,
+    'invite_id', gen_random_uuid(), 'issued_at', floor(extract(epoch from now()))::bigint);
+  insert into public.idempotency_keys(organization_id, key, endpoint, request_hash, status_code, response_body, tenant_creation_trusted)
+    values (org.id, p_key::text, '/api/v1/admin/tenants:' || p_actor::text,
+      decode(p_hash, 'hex'), 201, result, true);
+  return result || jsonb_build_object('created', true);
+end $$;
+
+revoke all on function public.fn_create_tenant_with_owner(uuid, uuid, jsonb, text) from public, anon, authenticated;
+grant execute on function public.fn_create_tenant_with_owner(uuid, uuid, jsonb, text) to service_role;

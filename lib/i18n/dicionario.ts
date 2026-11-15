@@ -15704,6 +15704,10 @@ export const DICIONARIO: Traducoes = {
   },
   // Cadastro central de Unidades (chaves já existentes no DICIONARIO não se repetem)
   Unidades: { es: "Unidades" },
+  CEP: { es: "Código postal" },
+  "Lojas e filiais: cadastro, CNPJ, endereço e status para a agenda de avaliação.": {
+    es: "Tiendas y sucursales: registro, CNPJ, dirección y estado para la agenda de evaluación.",
+  },
   "Cadastro das lojas e filiais usadas na agenda de avaliação. Unidades inativas não aparecem em novos agendamentos.": {
     es: "Registro de tiendas y sucursales usadas en la agenda de evaluación. Las unidades inactivas no aparecen en citas nuevas.",
   },

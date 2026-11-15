@@ -52,17 +52,7 @@ export function SidebarContent({
   );
   // Configurações sai da área que rola e vai para o rodapé fixo: medido em
   // 1280x768, ele caía fora da dobra mesmo em telas de 1080px.
-  //
-  // SALTO (temporário): menu enxuto — Agenda, Contatos, Casos, "Ver tudo em CRM"
-  // e Configurações. Os `sidebar: true` dos demais estão comentados em
-  // `catalogo.ts`; aqui escondemos hubs/grupos que sobrariam só com "Ver tudo".
-  // const HUBS_OCULTOS_NO_MENU = new Set(["ia", "analise"]); // histórico: alternativa
-  const grupos = todos.filter(
-    (g) =>
-      g.group.id !== GRUPO_NO_RODAPE &&
-      g.group.id !== "analise" && // SALTO: sem itens diários no menu
-      g.group.id !== "canais", // SALTO: Conexões/Webhooks fora do menu
-  );
+  const grupos = todos.filter((g) => g.group.id !== GRUPO_NO_RODAPE);
   const rodape = todos.find((g) => g.group.id === GRUPO_NO_RODAPE)?.group.hub;
 
   /**
@@ -367,30 +357,6 @@ export function SidebarContent({
                       </li>
                     );
                   })}
-                  {/* SALTO (temporário): só o hub de CRM no menu; IA/Análise ficam
-                      comentados abaixo — descomente o bloco original se quiser
-                      devolver "Ver tudo em IA" / "Ver tudo em Análise". */}
-                  {group.hub && group.id === "crm" && (
-                    <li>
-                      <Link
-                        href={group.hub.href}
-                        title={collapsed ? t(group.hub.label) : undefined}
-                        aria-current={pathname === group.hub.href ? "page" : undefined}
-                        onClick={onNavigate}
-                        className={cn(
-                          "flex items-center gap-3 rounded-md px-3 py-1 text-sm transition-colors",
-                          pathname === group.hub.href
-                            ? "bg-accent text-accent-foreground"
-                            : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
-                          collapsed && "justify-center px-2",
-                        )}
-                      >
-                        <ArrowRight size={18} aria-hidden />
-                        {!collapsed && <span className="truncate">{t(group.hub.label)}</span>}
-                      </Link>
-                    </li>
-                  )}
-                  {/*
                   {group.hub && (
                     <li>
                       <Link
@@ -411,7 +377,6 @@ export function SidebarContent({
                       </Link>
                     </li>
                   )}
-                  */}
                 </ul>
               )}
             </div>
