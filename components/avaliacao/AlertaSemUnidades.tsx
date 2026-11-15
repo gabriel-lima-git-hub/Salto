@@ -1,14 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { toast } from "sonner";
+import Link from "next/link";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useActiveOrg } from "@/hooks/auth/AuthProvider";
-import { useCriarUnidadeAvaliacao } from "@/hooks/avaliacao/useCriarUnidadeAvaliacao";
 import { useT } from "@/hooks/i18n/useT";
 import { ROLE_RANK, type Role } from "@/lib/auth/types";
 
@@ -20,8 +16,6 @@ function podeGerirUnidades(role: Role | undefined): boolean {
 export function AlertaSemUnidades({ carregando }: { carregando: boolean }) {
   const t = useT();
   const org = useActiveOrg();
-  const criar = useCriarUnidadeAvaliacao();
-  const [nome, setNome] = useState("");
 
   if (carregando) return null;
 
@@ -33,38 +27,13 @@ export function AlertaSemUnidades({ carregando }: { carregando: boolean }) {
       <AlertDescription className="space-y-3">
         <p>
           {t(
-            "O agendamento exige uma unidade (loja). Enquanto a lista de unidades estiver vazia, o servidor devolve",
-          )}{" "}
-          <code className="text-xs">{`{ "data": [] }`}</code> {t("e nada é gravado.")}
+            "O agendamento exige uma unidade (loja). Cadastre a primeira unidade com CNPJ e dados da loja para liberar a agenda.",
+          )}
         </p>
         {gestor ? (
-          <div className="flex flex-wrap items-end gap-2">
-            <div className="min-w-[12rem] flex-1 space-y-1">
-              <Label htmlFor="av-primeira-unidade" className="text-xs font-medium">
-                {t("Nome da unidade")}
-              </Label>
-              <Input
-                id="av-primeira-unidade"
-                placeholder={t("Ex.: Matriz")}
-                value={nome}
-                onChange={(e) => setNome(e.target.value)}
-              />
-            </div>
-            <Button
-              type="button"
-              disabled={!nome.trim() || criar.isPending}
-              onClick={() => {
-                criar.mutate(nome, {
-                  onSuccess: () => {
-                    toast.success(t("Unidade criada. Agora você pode salvar o agendamento."));
-                    setNome("");
-                  },
-                });
-              }}
-            >
-              {t("Criar unidade")}
-            </Button>
-          </div>
+          <Button type="button" asChild>
+            <Link href="/app/unidades">{t("Cadastrar unidades")}</Link>
+          </Button>
         ) : (
           <p className="text-sm">
             {t("Peça a um gestor ou administrador para cadastrar a primeira unidade.")}

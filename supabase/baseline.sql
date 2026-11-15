@@ -52849,8 +52849,42 @@ begin
     constraint avaliacao_unidades_nome_unico unique (organization_id, name)
   );
 
+  alter table public.avaliacao_unidades add column if not exists cnpj text;
+  alter table public.avaliacao_unidades add column if not exists internal_code text;
+  alter table public.avaliacao_unidades add column if not exists employee_count integer;
+  alter table public.avaliacao_unidades add column if not exists cep text;
+  alter table public.avaliacao_unidades add column if not exists state text;
+  alter table public.avaliacao_unidades add column if not exists city text;
+  alter table public.avaliacao_unidades add column if not exists neighborhood text;
+  alter table public.avaliacao_unidades add column if not exists street text;
+  alter table public.avaliacao_unidades add column if not exists number text;
+  alter table public.avaliacao_unidades add column if not exists complement text;
+  alter table public.avaliacao_unidades add column if not exists phone text;
+  alter table public.avaliacao_unidades add column if not exists email text;
+  alter table public.avaliacao_unidades add column if not exists responsible_name text;
+  alter table public.avaliacao_unidades add column if not exists notes text;
+
+  alter table public.avaliacao_unidades drop constraint if exists avaliacao_unidades_employee_count_check;
+  alter table public.avaliacao_unidades
+    add constraint avaliacao_unidades_employee_count_check
+    check (employee_count is null or employee_count >= 0);
+
+  alter table public.avaliacao_unidades drop constraint if exists avaliacao_unidades_state_check;
+  alter table public.avaliacao_unidades
+    add constraint avaliacao_unidades_state_check
+    check (state is null or state ~ '^[A-Z]{2}$');
+
+  alter table public.avaliacao_unidades drop constraint if exists avaliacao_unidades_cnpj_formato;
+  alter table public.avaliacao_unidades
+    add constraint avaliacao_unidades_cnpj_formato
+    check (cnpj is null or cnpj ~ '^[0-9A-Z]{14}$');
+
   create index if not exists avaliacao_unidades_org_idx
     on public.avaliacao_unidades (organization_id);
+
+  create unique index if not exists avaliacao_unidades_cnpj_unico
+    on public.avaliacao_unidades (organization_id, cnpj)
+    where cnpj is not null;
 
   create table if not exists public.avaliacao_agendamentos (
     id uuid primary key default gen_random_uuid(),
@@ -52977,6 +53011,8 @@ $f$;
 
 revoke execute on function public.fn_avaliacao_provisionar() from public, anon, authenticated;
 grant execute on function public.fn_avaliacao_provisionar() to service_role;
+
+
 
 create or replace function public.trg_avaliacao_status_guard()
 returns trigger
@@ -54217,6 +54253,19 @@ on conflict (provider, model_id) do update set
 alter table public.organizations
   add column if not exists interface_settings jsonb not null
   default '{"preset":"completa"}'::jsonb;
+
+-- ---- menu padrao volta a completa (migration 0678) ----
+-- DEPOIS do add column do 0367 (a coluna de organizations nasce ali).
+-- Não cria função — pode ficar depois da VARREDURA anon.
+alter table public.organizations
+  alter column interface_settings set default '{"preset":"completa"}'::jsonb;
+
+alter table public.user_organizations
+  alter column interface_settings set default '{"preset":"completa"}'::jsonb;
+
+alter table public.team_invites
+  alter column interface_settings set default '{"preset":"completa"}'::jsonb;
+
 
 do $$
 begin

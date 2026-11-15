@@ -199,10 +199,10 @@ describe("medição da folga (pergunta de aceite da issue #1341)", () => {
     expect(itensNoMenuLateral(combinarInterfaces(completa, completa))).toBe(15);
   });
 
-  it("configuração SIMPLIFICADA (empresa escolhe o preset): 6 itens, folga 9", () => {
+  it("configuração SIMPLIFICADA (empresa escolhe o preset): 3 itens, folga 12", () => {
     const itens = itensNoMenuLateral(combinarInterfaces(simplificada, completa));
-    expect(itens).toBe(6);
-    expect(15 - itens).toBe(9);
+    expect(itens).toBe(3);
+    expect(15 - itens).toBe(12);
   });
 
   it("configuração MÍNIMA (empresa escolhe 1 porta): 1 item, folga 14", () => {

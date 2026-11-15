@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { atualizarAgendamentoSchema, criarAgendamentoSchema } from "./schemas";
+import {
+  atualizarAgendamentoSchema,
+  atualizarUnidadeSchema,
+  criarAgendamentoSchema,
+  unidadeSchema,
+} from "./schemas";
 
 const UNIT = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 
@@ -97,5 +102,29 @@ describe("atualizarAgendamentoSchema", () => {
     expect(
       atualizarAgendamentoSchema.safeParse({ scheduled_at: "2026-11-12T12:00:00" }).success,
     ).toBe(false);
+  });
+});
+
+describe("unidadeSchema", () => {
+  const CNPJ_OK = "11.222.333/0001-81";
+
+  it("exige nome e CNPJ válido e normaliza dígitos", () => {
+    const r = unidadeSchema.safeParse({ name: "Mooca", cnpj: CNPJ_OK });
+    expect(r.success).toBe(true);
+    if (!r.success) return;
+    expect(r.data.cnpj).toBe("11222333000181");
+    expect(r.data.name).toBe("Mooca");
+  });
+
+  it("recusa CNPJ inválido e corpo sem CNPJ", () => {
+    expect(unidadeSchema.safeParse({ name: "Mooca", cnpj: "11.222.333/0001-80" }).success).toBe(
+      false,
+    );
+    expect(unidadeSchema.safeParse({ name: "Mooca" }).success).toBe(false);
+  });
+
+  it("PATCH aceita só is_active e recusa corpo vazio", () => {
+    expect(atualizarUnidadeSchema.safeParse({ is_active: false }).success).toBe(true);
+    expect(atualizarUnidadeSchema.safeParse({}).success).toBe(false);
   });
 });

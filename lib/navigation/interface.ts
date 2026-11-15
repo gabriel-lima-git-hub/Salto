@@ -19,13 +19,17 @@ export const interfaceSettingsSchema = z
   .strict();
 export type InterfaceSettings = z.infer<typeof interfaceSettingsSchema>;
 export const INTERFACE_COMPLETA: InterfaceSettings = { preset: "completa" };
+/** Preset enxuto — escolha em Configurações → Empresa / Equipe (não é o default). */
+export const INTERFACE_SIMPLIFICADA: InterfaceSettings = { preset: "simplificada" };
+/**
+ * Preset "simplificada" — além das portas essenciais (perfil, segurança, equipe,
+ * empresa): Agenda, Contatos e Casos. CRM e Configurações entram como "Ver tudo"
+ * do hub quando há item do grupo. O default da instalação continua `completa`.
+ */
 const SIMPLIFICADA: readonly NavDestinationId[] = [
-  "/app/inbox",
   "/app/agenda",
-  "/app/kanban",
   "/app/contacts",
-  "/app/tasks",
-  "/app/connections",
+  "/app/ai/cases",
 ];
 /** Portas pessoais e recuperação administrativa não são removíveis. Atualização
  * e administração de plataforma têm consumidores próprios com seus gates atuais.

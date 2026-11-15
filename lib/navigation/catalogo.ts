@@ -980,6 +980,19 @@ export const NAV_CATALOG = [
     minRole: "admin",
   },
   {
+    // Cadastro central das lojas/filiais do módulo `avaliacao`. SEM `sidebar`:
+    // porta de módulo opcional mora no hub de Configurações (grupo com hub;
+    // régua de `porta-do-modulo-ligado`). Agenda e filtros usam o mesmo `unit_id`.
+    href: "/app/unidades",
+    label: "Unidades",
+    description: "Lojas e filiais: cadastro, CNPJ, endereço e status para a agenda de avaliação.",
+    icon: "Buildings",
+    group: "organizacao",
+    section: "Sua empresa",
+    minRole: "viewer",
+    modulo: "avaliacao",
+  },
+  {
     // Vizinha de Conversões, e SEPARADA dela de propósito. As duas conectam "a
     // Meta" e a tentação de fundi-las é real — mas são credenciais de escopos
     // diferentes, em tabelas diferentes (0214), com consequências opostas
