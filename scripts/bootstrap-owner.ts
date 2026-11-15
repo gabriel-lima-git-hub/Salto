@@ -63,6 +63,17 @@ const APP_LOCALE = (IDIOMAS_SERVIDOS as readonly string[]).includes(
   ? (env.APP_LOCALE as string).trim()
   : "pt-BR";
 
+/**
+ * Menu lateral na instalação. Default = completa (contrato do produto e do E2E).
+ * `OWNER_INTERFACE_PRESET=simplificada` enxuga para Agenda / Contatos / Casos
+ * (mais hubs e Configurações) — uso típico Salto; o E2E não define a variável.
+ */
+const OWNER_INTERFACE_PRESET =
+  (env.OWNER_INTERFACE_PRESET ?? "").trim() === "simplificada"
+    ? ("simplificada" as const)
+    : ("completa" as const);
+const INTERFACE_DO_DONO = { preset: OWNER_INTERFACE_PRESET };
+
 if (!SUPABASE_URL || !SERVICE_ROLE) {
   throw new Error("Faltam NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY.");
 }
@@ -125,12 +136,15 @@ async function ensureOrg(ownerId: string): Promise<string> {
       legal_name: ORG_NAME,
       locale: APP_LOCALE,
       created_by: ownerId,
+      interface_settings: INTERFACE_DO_DONO,
     } as never)
     .select("id")
     .single();
   if (error || !data) throw new Error(`criar org: ${error?.message}`);
   const orgId = (data as { id: string }).id;
-  console.log(`[bootstrap] org criada: ${orgId}`);
+  console.log(
+    `[bootstrap] org criada: ${orgId} (menu ${OWNER_INTERFACE_PRESET})`,
+  );
   await aplicarProvedorEscolhido(orgId);
   return orgId;
 }
@@ -222,6 +236,7 @@ async function ensureMembership(userId: string, orgId: string): Promise<void> {
     organization_id: orgId,
     role: "admin",
     accepted_at: new Date().toISOString(),
+    interface_settings: INTERFACE_DO_DONO,
   } as never);
   if (error) throw new Error(`associação: ${error.message}`);
   console.log("[bootstrap] dono associado como admin");

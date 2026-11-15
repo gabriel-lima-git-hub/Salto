@@ -19,12 +19,12 @@ export const interfaceSettingsSchema = z
   .strict();
 export type InterfaceSettings = z.infer<typeof interfaceSettingsSchema>;
 export const INTERFACE_COMPLETA: InterfaceSettings = { preset: "completa" };
-/** Padrão do produto (Salto): menu enxuto. Completa continua disponível na tela. */
+/** Preset enxuto — escolha em Configurações → Empresa / Equipe (não é o default). */
 export const INTERFACE_SIMPLIFICADA: InterfaceSettings = { preset: "simplificada" };
 /**
- * Preset "simplificada" — o que aparece no menu lateral além das portas
- * essenciais (perfil, segurança, equipe, empresa). CRM e Configurações
- * entram como "Ver tudo" do hub quando há item do grupo.
+ * Preset "simplificada" — além das portas essenciais (perfil, segurança, equipe,
+ * empresa): Agenda, Contatos e Casos. CRM e Configurações entram como "Ver tudo"
+ * do hub quando há item do grupo. O default da instalação continua `completa`.
  */
 const SIMPLIFICADA: readonly NavDestinationId[] = [
   "/app/agenda",

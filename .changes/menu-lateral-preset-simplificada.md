@@ -1,7 +1,7 @@
 ---
 impacto: capacidade_nova
 secao: alterado
-titulo: Menu lateral padrão enxuto (Agenda, Contatos, Casos)
+titulo: Preset Simplificada enxuto (Agenda, Contatos, Casos)
 ---
 
-Instalações e organizações novas nascem com o preset **Simplificada**: Agenda, Contatos e Casos no menu (mais Configurações e os hubs). Quem já estava no preset Completa sem personalização passa para o enxuto na atualização. O menu Completo continua disponível em Configurações → Empresa.
+O perfil **Simplificada** do menu lateral passa a mostrar Agenda, Contatos e Casos (mais Configurações e os hubs). O padrão da instalação continua **Completa**. Para o menu enxuto: Configurações → Empresa → Menu lateral → Simplificada → Aplicar.

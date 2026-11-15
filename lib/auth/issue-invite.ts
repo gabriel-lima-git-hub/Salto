@@ -1,6 +1,6 @@
 import {
   interfaceSettingsSchema,
-  INTERFACE_SIMPLIFICADA,
+  INTERFACE_COMPLETA,
   interfaceTemDestino,
   type InterfaceSettings,
 } from "@/lib/navigation/interface";
@@ -27,7 +27,7 @@ export async function issueInvite(input: {
   dispatch?: boolean;
 }) {
   const interfaceSettings = interfaceSettingsSchema.parse(
-    input.interfaceSettings ?? INTERFACE_SIMPLIFICADA,
+    input.interfaceSettings ?? INTERFACE_COMPLETA,
   );
   if (!interfaceTemDestino(interfaceSettings, input.role))
     throw new Error("Selecione ao menos uma área permitida ao papel.");

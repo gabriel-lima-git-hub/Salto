@@ -22,7 +22,7 @@ import { env } from "@/lib/env";
 import { issueInvite } from "@/lib/auth/issue-invite";
 import { signInviteToken } from "@/lib/auth/invite-token";
 import {
-  INTERFACE_SIMPLIFICADA,
+  INTERFACE_COMPLETA,
   interfaceSettingsSchema,
   type InterfaceSettings,
 } from "@/lib/navigation/interface";
@@ -112,7 +112,7 @@ export async function emitirConvite(
 ): Promise<ResultadoEmissao> {
   const email = params.email.trim().toLowerCase();
   const interfaceSettings = interfaceSettingsSchema.parse(
-    params.interfaceSettings ?? INTERFACE_SIMPLIFICADA,
+    params.interfaceSettings ?? INTERFACE_COMPLETA,
   );
 
   const { data: pendente } = await admin
