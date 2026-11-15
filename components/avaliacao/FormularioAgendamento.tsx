@@ -234,7 +234,11 @@ export function FormularioAgendamento({
             <h3 className="text-sm font-medium">{t("Agendamento")}</h3>
             <div className="space-y-2">
               <Label>{t("Unidade")}</Label>
-              <Select value={unitId} onValueChange={setUnitId} disabled={unidades.filter((u) => u.is_active).length === 0}>
+              <Select
+                value={unitId}
+                onValueChange={setUnitId}
+                disabled={unidades.filter((u) => u.is_active || u.id === unitId).length === 0}
+              >
                 <SelectTrigger>
                   <SelectValue
                     placeholder={
@@ -246,10 +250,10 @@ export function FormularioAgendamento({
                 </SelectTrigger>
                 <SelectContent>
                   {unidades
-                    .filter((u) => u.is_active)
+                    .filter((u) => u.is_active || u.id === unitId)
                     .map((u) => (
                       <SelectItem key={u.id} value={u.id}>
-                        {u.name}
+                        {u.is_active ? u.name : `${u.name} (${t("Inativa")})`}
                       </SelectItem>
                     ))}
                 </SelectContent>

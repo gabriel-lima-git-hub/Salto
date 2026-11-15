@@ -1,6 +1,28 @@
 import { z } from "zod";
 
+import { normalizarCnpjUnidade } from "./cnpj-unidade";
 import { STATUS_AVALIACAO } from "./status";
+
+const textoOpcional = (max: number) =>
+  z
+    .string()
+    .trim()
+    .max(max)
+    .optional()
+    .transform((v) => (v === undefined || v === "" ? null : v));
+
+const cnpjCampo = z
+  .string()
+  .trim()
+  .min(1, "CNPJ é obrigatório.")
+  .transform((v, ctx) => {
+    const n = normalizarCnpjUnidade(v);
+    if (!n) {
+      ctx.addIssue({ code: "custom", message: "CNPJ inválido." });
+      return z.NEVER;
+    }
+    return n;
+  });
 
 const agendamentoCorpoSchema = z.object({
   contact_id: z.string().uuid().optional(),
@@ -67,6 +89,44 @@ export const listarAgendamentosSchema = z.object({
 
 export const unidadeSchema = z.object({
   name: z.string().trim().min(1).max(120),
+  cnpj: cnpjCampo,
+  internal_code: textoOpcional(64),
+  employee_count: z.number().int().min(0).max(1_000_000).nullable().optional(),
   sort_order: z.number().int().min(0).max(10_000).optional(),
   is_active: z.boolean().optional(),
+  cep: textoOpcional(16),
+  state: z.preprocess(
+    (v) => (typeof v === "string" && v.trim() === "" ? null : v),
+    z
+      .string()
+      .trim()
+      .toUpperCase()
+      .regex(/^[A-Z]{2}$/, "UF inválida.")
+      .nullable()
+      .optional(),
+  ),
+  city: textoOpcional(120),
+  neighborhood: textoOpcional(120),
+  street: textoOpcional(200),
+  number: textoOpcional(32),
+  complement: textoOpcional(120),
+  phone: textoOpcional(32),
+  email: z.preprocess(
+    (v) => (typeof v === "string" && v.trim() === "" ? null : v),
+    z.string().trim().email("E-mail inválido.").max(200).nullable().optional(),
+  ),
+  responsible_name: textoOpcional(200),
+  notes: textoOpcional(4000),
 });
+
+/**
+ * PATCH: CNPJ opcional (pode completar unidade legada). Demais campos iguais.
+ * No Zod 4, `.partial()` sozinho deixa `cnpj` obrigatório se não reescrevermos.
+ */
+export const atualizarUnidadeSchema = unidadeSchema
+  .omit({ cnpj: true })
+  .extend({
+    cnpj: cnpjCampo.optional(),
+  })
+  .partial()
+  .refine((v) => Object.keys(v).length > 0, { message: "Nenhum campo para atualizar." });

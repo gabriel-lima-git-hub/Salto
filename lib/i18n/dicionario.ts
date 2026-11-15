@@ -15694,19 +15694,46 @@ export const DICIONARIO: Traducoes = {
 
   // Agenda › Avaliação — alerta sem unidades + formulário de agendamento
   "Sem unidade cadastrada": { es: "No hay ninguna unidad registrada" },
-  "O agendamento exige uma unidade (loja). Enquanto a lista de unidades estiver vazia, o servidor devolve": {
-    es: "La cita exige una unidad (tienda). Mientras la lista de unidades esté vacía, el servidor devuelve",
+  "O agendamento exige uma unidade (loja). Cadastre a primeira unidade com CNPJ e dados da loja para liberar a agenda.": {
+    es: "La cita exige una unidad (tienda). Registra la primera unidad con CNPJ y datos de la tienda para liberar la agenda.",
   },
-  "e nada é gravado.": { es: "y no se guarda nada." },
+  "Cadastrar unidades": { es: "Registrar unidades" },
   "Nome da unidade": { es: "Nombre de la unidad" },
-  "Ex.: Matriz": { es: "Ej.: Matriz" },
-  "Unidade criada. Agora você pode salvar o agendamento.": {
-    es: "Unidad creada. Ahora puedes guardar la cita.",
-  },
-  "Criar unidade": { es: "Crear unidad" },
   "Peça a um gestor ou administrador para cadastrar a primeira unidade.": {
     es: "Pide a un gestor o administrador que registre la primera unidad.",
   },
+  // Cadastro central de Unidades (chaves já existentes no DICIONARIO não se repetem)
+  Unidades: { es: "Unidades" },
+  "Cadastro das lojas e filiais usadas na agenda de avaliação. Unidades inativas não aparecem em novos agendamentos.": {
+    es: "Registro de tiendas y sucursales usadas en la agenda de evaluación. Las unidades inactivas no aparecen en citas nuevas.",
+  },
+  "Nova unidade": { es: "Nueva unidad" },
+  "Editar unidade": { es: "Editar unidad" },
+  "Nome ou CNPJ": { es: "Nombre o CNPJ" },
+  Ativas: { es: "Activas" },
+  Inativas: { es: "Inactivas" },
+  "Data de cadastro": { es: "Fecha de registro" },
+  "Nenhuma unidade encontrada.": { es: "No se encontró ninguna unidad." },
+  "Nome e CNPJ são obrigatórios.": { es: "Nombre y CNPJ son obligatorios." },
+  "Unidade atualizada.": { es: "Unidad actualizada." },
+  "Unidade criada.": { es: "Unidad creada." },
+  "Unidade inativada.": { es: "Unidad desactivada." },
+  "Unidade ativada.": { es: "Unidad activada." },
+  "Unidade excluída.": { es: "Unidad eliminada." },
+  "Excluir unidade": { es: "Eliminar unidad" },
+  "Só é possível excluir unidades sem agendamentos. Se houver histórico, inative a unidade em vez de excluir.": {
+    es: "Solo se pueden eliminar unidades sin citas. Si hay historial, desactiva la unidad en lugar de eliminarla.",
+  },
+  Inativar: { es: "Desactivar" },
+  "Código interno": { es: "Código interno" },
+  "Quantidade de funcionários": { es: "Cantidad de empleados" },
+  "Estado (UF)": { es: "Estado (UF)" },
+  "Rua/Avenida": { es: "Calle/Avenida" },
+  "Telefone de contato": { es: "Teléfono de contacto" },
+  "E-mail da unidade": { es: "Correo de la unidad" },
+  "Nome do responsável": { es: "Nombre del responsable" },
+  "Observações internas": { es: "Notas internas" },
+  Funcionários: { es: "Empleados" },
   "Nenhuma unidade ativa — crie uma antes de salvar.": {
     es: "Ninguna unidad activa — crea una antes de guardar.",
   },

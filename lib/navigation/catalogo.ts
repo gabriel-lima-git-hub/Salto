@@ -172,7 +172,7 @@ export const NAV_CATALOG = [
     description: "As conversas de WhatsApp, com você e a IA atendendo lado a lado.",
     icon: "Inbox",
     group: "atendimento",
-    sidebar: true,
+    // sidebar: true, // SALTO (temporário): fora do menu lateral
     // Quantas conversas a IA passou para a equipe e esperam uma pessoa (aba Fila).
     contador: "fila",
   },
@@ -182,7 +182,7 @@ export const NAV_CATALOG = [
     description: "Quem esfriou e ainda está aberto — o que corre risco de morrer sem resposta.",
     icon: "ClockCountdown",
     group: "atendimento",
-    sidebar: true,
+    // sidebar: true, // SALTO (temporário): fora do menu lateral
   },
   {
     // Entra em "atendimento", e não em "organizacao", porque a Agenda é onde o
@@ -195,7 +195,19 @@ export const NAV_CATALOG = [
     description: "O que está marcado, com quem, e quem atende — seu e da equipe.",
     icon: "CalendarBlank",
     group: "atendimento",
-    sidebar: true,
+    sidebar: true, // SALTO: permanece no menu
+  },
+  {
+    // Cadastro central das lojas/filiais do módulo avaliação. A Agenda e os
+    // filtros consomem a mesma tabela (`avaliacao_unidades`) via `unit_id`.
+    href: "/app/unidades",
+    label: "Unidades",
+    description: "Lojas e filiais: cadastro, CNPJ, endereço e status para a agenda de avaliação.",
+    icon: "Buildings",
+    group: "atendimento",
+    // sidebar: true, // SALTO (temporário): fora do menu lateral — acesse por URL /app/unidades
+    minRole: "viewer",
+    modulo: "avaliacao",
   },
   {
     // Renomeado de "Templates": estes são scripts do atendente, consumidos pelo
@@ -206,7 +218,7 @@ export const NAV_CATALOG = [
     description: "Scripts salvos para responder mais rápido, seus ou da equipe.",
     icon: "FileText",
     group: "atendimento",
-    sidebar: true,
+    // sidebar: true, // SALTO (temporário): fora do menu lateral
   },
 
   // ---- CRM — o funil ----
@@ -227,7 +239,7 @@ export const NAV_CATALOG = [
     icon: "Kanban",
     group: "crm",
     section: "O dia a dia da venda",
-    sidebar: true,
+    // sidebar: true, // SALTO (temporário): fora do menu lateral
   },
   {
     // A campanha vive no CRM e não em Conexões: quem a usa está pensando em
@@ -250,7 +262,7 @@ export const NAV_CATALOG = [
     icon: "Users",
     group: "crm",
     section: "O dia a dia da venda",
-    sidebar: true,
+    sidebar: true, // SALTO: permanece no menu
   },
   {
     href: "/app/companies",
@@ -288,7 +300,7 @@ export const NAV_CATALOG = [
     icon: "ListChecks",
     group: "crm",
     section: "O dia a dia da venda",
-    sidebar: true,
+    // sidebar: true, // SALTO (temporário): fora do menu lateral
   },
   {
     // A porta dos planos de tarefa (#1752): montar a sequência UMA vez e o
@@ -520,7 +532,7 @@ export const NAV_CATALOG = [
     group: "ia",
     section: "Montar o agente",
     minRole: "manager",
-    sidebar: true,
+    // sidebar: true, // SALTO (temporário): fora do menu lateral
   },
   {
     href: "/app/ai/followups",
@@ -530,7 +542,7 @@ export const NAV_CATALOG = [
     group: "ia",
     section: "Montar o agente",
     minRole: "manager",
-    sidebar: true,
+    // sidebar: true, // SALTO (temporário): fora do menu lateral
   },
   {
     // Os roteiros de atendimento (#1130, de @vgamkt): perguntas que a IA conduz
@@ -633,7 +645,7 @@ export const NAV_CATALOG = [
     // Uso diário: a IA abre caso quando precisa de uma pessoa e segue
     // atendendo enquanto espera. Escondido no hub, o caso só era visto por quem
     // fosse procurar — medido numa loja que vende pelo WhatsApp.
-    sidebar: true,
+    sidebar: true, // SALTO: permanece no menu
     contador: "casos",
   },
   {
@@ -711,7 +723,7 @@ export const NAV_CATALOG = [
     icon: "PlugsConnected",
     group: "canais",
     minRole: "admin",
-    sidebar: true,
+    // sidebar: true, // SALTO (temporário): fora do menu lateral
     healthDot: true,
   },
   {
@@ -745,7 +757,7 @@ export const NAV_CATALOG = [
     icon: "WebhooksLogo",
     group: "canais",
     minRole: "manager",
-    sidebar: true,
+    // sidebar: true, // SALTO (temporário): fora do menu lateral
   },
 
   // ---- Análise — olhar o sistema funcionando ----
@@ -805,7 +817,7 @@ export const NAV_CATALOG = [
     icon: "ChartBar",
     group: "analise",
     section: "Os números do período",
-    sidebar: true,
+    // sidebar: true, // SALTO (temporário): fora do menu lateral
   },
   {
     // Logo abaixo de Desempenho porque responde a metade da MESMA pergunta: lá
@@ -821,7 +833,7 @@ export const NAV_CATALOG = [
     // pessoa — orçamento e criativo são da empresa inteira. Mesmo grau dos
     // outros dois vizinhos do grupo.
     minRole: "manager",
-    sidebar: true,
+    // sidebar: true, // SALTO (temporário): fora do menu lateral
   },
   {
     // Irmã de "Desempenho", não a mesma coisa: lá é DESFECHO (funil agora,
@@ -836,7 +848,7 @@ export const NAV_CATALOG = [
     icon: "ClockCounterClockwise",
     group: "analise",
     section: "Os números do período",
-    sidebar: true,
+    // sidebar: true, // SALTO (temporário): fora do menu lateral
   },
   {
     // Observabilidade, não configuração: por isso não fica junto dos agentes.

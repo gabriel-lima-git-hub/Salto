@@ -63,7 +63,12 @@ export function AgendaAvaliacaoShell({ timezone }: { timezone: string | null }) 
   }, [ancora, filtrosBase, modoPeriodo]);
 
   const lista = useAgendamentosAvaliacao(filtros);
-  const unidades = useUnidadesAvaliacao();
+  // Gestão lista todas (histórico); o formulário de novo agendamento só ativas.
+  const unidades = useUnidadesAvaliacao({ filtro: "todas" });
+  const unidadesAtivas = useMemo(
+    () => (unidades.data ?? []).filter((u) => u.is_active),
+    [unidades.data],
+  );
 
   const semanaLabel = format(startOfWeek(ancora, { weekStartsOn: 1 }), "MMMM yyyy", {
     locale: localeDaData,
@@ -131,7 +136,7 @@ export function AgendaAvaliacaoShell({ timezone }: { timezone: string | null }) 
         </Button>
       </div>
 
-      {(unidades.data?.length ?? 0) === 0 ? (
+      {unidadesAtivas.length === 0 ? (
         <AlertaSemUnidades carregando={unidades.isLoading} />
       ) : null}
 
