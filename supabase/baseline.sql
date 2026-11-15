@@ -53284,6 +53284,28 @@ $f$;
 revoke execute on function public.fn_avaliacao_resolver_consultor(uuid, uuid) from public, anon;
 grant execute on function public.fn_avaliacao_resolver_consultor(uuid, uuid) to authenticated, service_role;
 
+-- ---- menu padrao volta a completa (migration 0678) ----
+-- Restaura só o DEFAULT da coluna. O preset simplificada (Agenda/Contatos/Casos)
+-- continua no TypeScript e na tela; orgs que já escolheram não são reescritas.
+
+alter table public.organizations
+  alter column interface_settings set default '{"preset":"completa"}'::jsonb;
+
+alter table public.user_organizations
+  alter column interface_settings set default '{"preset":"completa"}'::jsonb;
+
+alter table public.team_invites
+  alter column interface_settings set default '{"preset":"completa"}'::jsonb;
+
+create or replace function public.fn_accept_team_invite(
+ p_user uuid, p_org uuid, p_role text, p_invited_by uuid,
+ p_issued_at timestamptz, p_invited_at timestamptz
+) returns jsonb language sql security definer set search_path = public, pg_temp as $$
+ select public.fn_accept_team_invite(p_user,p_org,p_role,p_invited_by,p_issued_at,p_invited_at,'{"preset":"completa"}'::jsonb);
+$$;
+revoke all on function public.fn_accept_team_invite(uuid,uuid,text,uuid,timestamptz,timestamptz) from public,anon,authenticated;
+grant execute on function public.fn_accept_team_invite(uuid,uuid,text,uuid,timestamptz,timestamptz) to service_role;
+
 -- ---- VARREDURA anon: função nova nasce exposta em quem ATUALIZA (migration 0116) ----
 --
 -- ⚠️ DE PROPÓSITO, NENHUMA FUNÇÃO É CRIADA DEPOIS DESTE BLOCO. Apêndice que cria
@@ -55784,25 +55806,3 @@ on conflict (model) do update set
   completion_cents_per_million_tokens = excluded.completion_cents_per_million_tokens,
   notes = excluded.notes,
   superseded_at = null;
-
--- ---- menu padrao volta a completa (migration 0678) ----
--- Restaura só o DEFAULT da coluna. O preset simplificada (Agenda/Contatos/Casos)
--- continua no TypeScript e na tela; orgs que já escolheram não são reescritas.
-
-alter table public.organizations
-  alter column interface_settings set default '{"preset":"completa"}'::jsonb;
-
-alter table public.user_organizations
-  alter column interface_settings set default '{"preset":"completa"}'::jsonb;
-
-alter table public.team_invites
-  alter column interface_settings set default '{"preset":"completa"}'::jsonb;
-
-create or replace function public.fn_accept_team_invite(
- p_user uuid, p_org uuid, p_role text, p_invited_by uuid,
- p_issued_at timestamptz, p_invited_at timestamptz
-) returns jsonb language sql security definer set search_path = public, pg_temp as $$
- select public.fn_accept_team_invite(p_user,p_org,p_role,p_invited_by,p_issued_at,p_invited_at,'{"preset":"completa"}'::jsonb);
-$$;
-revoke all on function public.fn_accept_team_invite(uuid,uuid,text,uuid,timestamptz,timestamptz) from public,anon,authenticated;
-grant execute on function public.fn_accept_team_invite(uuid,uuid,text,uuid,timestamptz,timestamptz) to service_role;
