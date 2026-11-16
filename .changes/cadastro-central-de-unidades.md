@@ -1,7 +1,7 @@
 ---
 impacto: capacidade_nova
 secao: adicionado
-titulo: Cadastro central de Unidades no menu lateral
+titulo: Cadastro central de Unidades
 ---
 
-Com o módulo **avaliação** ligado, o menu ganha **Unidades**: cadastro com CNPJ, endereço, responsável e status. A agenda de avaliação continua usando o mesmo identificador (`unit_id`); unidades inativas deixam de aparecer em novos agendamentos e o histórico permanece.
+Com o módulo **avaliação** ligado, existe a tela **Unidades** (CNPJ, endereço, responsável e status). A agenda de avaliação usa o mesmo `unit_id`; unidades inativas não entram em novos agendamentos. A porta no menu lateral fica no fragmento `unidades-no-menu-lateral`.

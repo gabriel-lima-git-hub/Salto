@@ -42,9 +42,15 @@ const hrefs = (settings: unknown, role: "agent" | "admin" = "admin") =>
 /**
  * Os itens do MENU LATERAL — o mesmo recorte que o instrumento de tela mede:
  * só os grupos que aparecem na dobra, sem o grupo do rodapé.
+ * `modulos` default `[]` espelha o Sidebar (`modulos_ligados ?? []`): porta de
+ * módulo desligado não entra na conta do núcleo.
  */
-const itensNoMenuLateral = (settings: unknown, role: "agent" | "admin" = "admin") =>
-  sidebarGroups(false, role, settings as InterfaceSettings | undefined)
+const itensNoMenuLateral = (
+  settings: unknown,
+  role: "agent" | "admin" = "admin",
+  modulos: readonly import("@/lib/instalacao/modulos").ModuloOpcional[] = [],
+) =>
+  sidebarGroups(false, role, settings as InterfaceSettings | undefined, modulos)
     .filter((grupo) => grupo.group.id !== GRUPO_NO_RODAPE)
     .reduce((total, grupo) => total + grupo.items.length, 0);
 
@@ -203,6 +209,14 @@ describe("medição da folga (pergunta de aceite da issue #1341)", () => {
     const itens = itensNoMenuLateral(combinarInterfaces(simplificada, completa));
     expect(itens).toBe(3);
     expect(15 - itens).toBe(12);
+  });
+
+  it("módulo avaliação ligado: Unidades sobe ao menu (16º item)", () => {
+    const hrefs = sidebarGroups(false, "admin", INTERFACE_COMPLETA, ["avaliacao"])
+      .filter((grupo) => grupo.group.id !== GRUPO_NO_RODAPE)
+      .flatMap((grupo) => grupo.items.map((i) => i.href));
+    expect(hrefs).toContain("/app/unidades");
+    expect(itensNoMenuLateral(INTERFACE_COMPLETA, "admin", ["avaliacao"])).toBe(16);
   });
 
   it("configuração MÍNIMA (empresa escolhe 1 porta): 1 item, folga 14", () => {

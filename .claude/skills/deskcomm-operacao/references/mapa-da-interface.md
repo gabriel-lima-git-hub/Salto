@@ -11,6 +11,7 @@ Para consultar na hora, veja a seção 'Como consultar na hora' do SKILL.md.
 | Inbox | Atendimento → Inbox `/app/inbox` | As conversas de WhatsApp, com você e a IA atendendo lado a lado. | todos | Mostra quantas conversas esperam uma pessoa (aba Fila). |
 | Radar | Atendimento → Radar `/app/radar` | Quem esfriou e ainda está aberto — o que corre risco de morrer sem resposta. | todos |  |
 | Agenda | Atendimento → Agenda `/app/agenda` | O que está marcado, com quem, e quem atende — seu e da equipe. | todos |  |
+| Unidades | Atendimento → Unidades `/app/unidades` | Lojas e filiais: cadastro, CNPJ, endereço e status para a agenda de avaliação. | todos | Só aparece se o módulo `avaliacao` estiver ligado. |
 | Respostas rápidas | Atendimento → Respostas rápidas `/app/templates` | Scripts salvos para responder mais rápido, seus ou da equipe. | todos |  |
 
 ## CRM

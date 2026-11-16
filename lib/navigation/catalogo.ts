@@ -198,6 +198,20 @@ export const NAV_CATALOG = [
     sidebar: true,
   },
   {
+    // Cadastro das lojas/filiais do módulo `avaliacao`. Mora em Atendimento (e
+    // no menu lateral) porque quem opera a agenda de avaliação precisa das
+    // unidades no mesmo grupo do dia a dia — não atrás de Configurações. Com o
+    // módulo desligado a porta some; Agenda e filtros usam o mesmo `unit_id`.
+    href: "/app/unidades",
+    label: "Unidades",
+    description: "Lojas e filiais: cadastro, CNPJ, endereço e status para a agenda de avaliação.",
+    icon: "Buildings",
+    group: "atendimento",
+    sidebar: true,
+    minRole: "viewer",
+    modulo: "avaliacao",
+  },
+  {
     // Renomeado de "Templates": estes são scripts do atendente, consumidos pelo
     // Composer do inbox. O nome "Templates" fica livre para os da Meta (HSM),
     // onde é o termo técnico correto.
@@ -978,19 +992,6 @@ export const NAV_CATALOG = [
     // anúncios da empresa, e quem o troca decide para onde vai o dinheiro de
     // mídia. Um `manager` ficaria acima de billing na mesma prancheta.
     minRole: "admin",
-  },
-  {
-    // Cadastro central das lojas/filiais do módulo `avaliacao`. SEM `sidebar`:
-    // porta de módulo opcional mora no hub de Configurações (grupo com hub;
-    // régua de `porta-do-modulo-ligado`). Agenda e filtros usam o mesmo `unit_id`.
-    href: "/app/unidades",
-    label: "Unidades",
-    description: "Lojas e filiais: cadastro, CNPJ, endereço e status para a agenda de avaliação.",
-    icon: "Buildings",
-    group: "organizacao",
-    section: "Sua empresa",
-    minRole: "viewer",
-    modulo: "avaliacao",
   },
   {
     // Vizinha de Conversões, e SEPARADA dela de propósito. As duas conectam "a
