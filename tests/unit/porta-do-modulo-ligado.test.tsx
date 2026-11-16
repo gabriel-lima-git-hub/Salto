@@ -374,15 +374,16 @@ describe("nenhum caminho de menu é escrito à mão", () => {
     expect(MODULOS_NA_TELA.filter((m) => m.foraDoMenu).length).toBeGreaterThan(0);
   });
 
-  it("⭐ todo grupo com porta de módulo TEM hub — é o que valida reduzir o filtro a `sidebar`", () => {
-    // `sidebarGroups` filtra por `d.sidebar || (!group.hub && settings?.destinos)`. O segundo termo
-    // depende de `settings`, que esta função não recebe — mas ele só vale para grupo SEM hub. Se
-    // um dia uma porta de módulo cair num grupo sem hub, a redução deixa de valer e este caso
-    // avisa, em vez de o caminho passar a mentir em silêncio.
-    const semHub = MODULOS_OPCIONAIS.flatMap((m) =>
+  it("⭐ porta de módulo em grupo sem hub só sobe se tiver `sidebar: true`", () => {
+    // `ondeOModuloAparece` chama `sobeAoMenuLateral(d, false)` — não conhece a
+    // empresa. O segundo termo (`!group.hub && settings?.destinos`) só vale com
+    // escolha explícita; sem hub e sem `sidebar`, o caminho diria "só no menu"
+    // enquanto a porta fica invisível, ou o contrário com destinos. Unidades
+    // (`avaliacao`) em Atendimento é a exceção deliberada: sobe com `sidebar`.
+    const semHubSemSidebar = MODULOS_OPCIONAIS.flatMap((m) =>
       NAV_CATALOG.filter((d) => (d as { modulo?: string }).modulo === m),
-    ).filter((d) => !NAV_GROUPS.find((g) => g.id === d.group)?.hub);
-    expect(semHub.map((d) => d.href)).toEqual([]);
+    ).filter((d) => !NAV_GROUPS.find((g) => g.id === d.group)?.hub && !d.sidebar);
+    expect(semHubSemSidebar.map((d) => d.href)).toEqual([]);
   });
 });
 
