@@ -382,7 +382,10 @@ describe("nenhum caminho de menu é escrito à mão", () => {
     // (`avaliacao`) em Atendimento é a exceção deliberada: sobe com `sidebar`.
     const semHubSemSidebar = MODULOS_OPCIONAIS.flatMap((m) =>
       NAV_CATALOG.filter((d) => (d as { modulo?: string }).modulo === m),
-    ).filter((d) => !NAV_GROUPS.find((g) => g.id === d.group)?.hub && !d.sidebar);
+    ).filter((d) => {
+      const meta = d as { group: string; sidebar?: boolean };
+      return !NAV_GROUPS.find((g) => g.id === meta.group)?.hub && !meta.sidebar;
+    });
     expect(semHubSemSidebar.map((d) => d.href)).toEqual([]);
   });
 });
