@@ -38,6 +38,30 @@ describe("isWithinSchedule (tz-aware)", () => {
       true,
     );
   });
+
+  it("fim exclusivo: 23:59 NÃO entra em 00:00–23:59 (o buraco do 'dia inteiro')", () => {
+    // 2026-07-13 23:59 BRT == 2026-07-14 02:59Z. Sem isto, o e2e que publicava
+    // "00:00–23:59" falhava no CI sempre que o job caía nesse minuto.
+    const quaseMeiaNoite = new Date("2026-07-14T02:59:00Z");
+    expect(
+      isWithinSchedule(
+        {
+          timezone: "America/Sao_Paulo",
+          windows: [{ dow: 1, start: "00:00", end: "23:59" }],
+        },
+        quaseMeiaNoite,
+      ),
+    ).toBe(false);
+    expect(
+      isWithinSchedule(
+        {
+          timezone: "America/Sao_Paulo",
+          windows: [{ dow: 1, start: "23:00", end: "23:59" }],
+        },
+        new Date("2026-07-14T02:58:00Z"),
+      ),
+    ).toBe(true);
+  });
 });
 
 describe("isAttendantEligible (§5: disponível ∧ horário ∧ folga)", () => {
