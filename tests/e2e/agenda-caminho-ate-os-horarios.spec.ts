@@ -142,17 +142,20 @@ test("o selo de plantão distingue de plantão, fora do horário e desligado", a
   });
 
   const TZ = "America/Sao_Paulo";
-  // Dia da semana e hora AGORA, no fuso da jornada — a mesma pergunta que
-  // `localMoment` faz no produto.
+  // Dia da semana e hora:minuto AGORA, no fuso da jornada — a mesma pergunta
+  // que `localMoment` faz no produto (`hhmm >= start && hhmm < end`).
   const partes = new Intl.DateTimeFormat("en-US", {
     timeZone: TZ,
     weekday: "short",
     hour: "2-digit",
+    minute: "2-digit",
     hourCycle: "h23",
   }).formatToParts(new Date());
   const DIAS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const dow = DIAS.indexOf(partes.find((x) => x.type === "weekday")!.value);
   const hora = Number(partes.find((x) => x.type === "hour")!.value);
+  const minuto = Number(partes.find((x) => x.type === "minute")!.value);
+  const hh = (n: number) => String(n).padStart(2, "0");
 
   /** Grava a jornada pela mesma rota que o diálogo usa. */
   async function publicaJornada(windows: Array<{ dow: number; start: string; end: string }>) {
@@ -168,15 +171,30 @@ test("o selo de plantão distingue de plantão, fora do horário e desligado", a
     expect(res.status(), await res.text()).toBe(200);
   }
 
+  /**
+   * Janela que CONTÉM este instante sob fim exclusivo (`hhmm < end`).
+   *
+   * ⚠️ `"00:00"–"23:59"` NÃO é o dia inteiro: em 23:59 a conta dá fora, e
+   * `24:00` não é HH:MM válido no schema. Medido no CI (job 133061044966):
+   * 02:59Z = 23:59 em São Paulo → o selo ficava "Fora do horário" com a
+   * janela que este caso chamava de "dia inteiro".
+   */
+  function janelaQueContemAgora(): { dow: number; start: string; end: string } | null {
+    if (hora === 23 && minuto === 59) return null;
+    const start = `${hh(hora)}:00`;
+    const end = hora < 23 ? `${hh(hora + 1)}:00` : "23:59";
+    return { dow, start, end };
+  }
+
   // ── 1. DESLIGADO ─────────────────────────────────────────────────────────
   // A decisão de gente vence tudo: com a chave desligada não importa jornada.
   const chave = linha.getByRole("switch");
   if (await chave.isChecked()) await chave.click();
   await expect(linha.getByText("Desligado", { exact: true })).toBeVisible({ timeout: 15_000 });
 
-  // ── 2. DE PLANTÃO, com jornada que contém AGORA ──────────────────────────
-  // A janela cobre o dia inteiro de hoje: contém este instante a qualquer hora.
-  await publicaJornada([{ dow, start: "00:00", end: "23:59" }]);
+  // ── 2. DE PLANTÃO, com jornada que contém AGORA (ou 24/7 no último minuto) ─
+  const dentro = janelaQueContemAgora();
+  await publicaJornada(dentro ? [dentro] : []);
   await chave.click();
   await expect(
     linha.getByText("De plantão", { exact: true }),
@@ -184,11 +202,10 @@ test("o selo de plantão distingue de plantão, fora do horário e desligado", a
   ).toBeVisible({ timeout: 15_000 });
 
   // ── 3. FORA DO HORÁRIO — a chave continua LIGADA ─────────────────────────
-  // Uma janela de uma hora que não contém agora. É o estado que antes aparecia
+  // Uma janela de meia hora que não contém agora. É o estado que antes aparecia
   // como "Offline", igualzinho a quem tinha desligado — e fazia o operador
   // procurar defeito onde só havia jornada terminada.
   const outra = (hora + 3) % 24;
-  const hh = (n: number) => String(n).padStart(2, "0");
   await publicaJornada([{ dow, start: `${hh(outra)}:00`, end: `${hh(outra)}:30` }]);
   await page.reload();
   await expect(page.getByTestId("atendentes-e-horarios")).toBeVisible({ timeout: 20_000 });

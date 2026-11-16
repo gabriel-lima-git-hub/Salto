@@ -165,19 +165,10 @@ describe("ondeOModuloAparece: a tela pode dizer o que ligar vai mudar", () => {
 
 describe("o grupo é o que está NA TELA, não o rótulo do modelo de dados", () => {
   /**
-   * ⚠️ O CAMINHO PRECISA DO PASSO DO HUB, e esta é a decisão do dono do produto (opção B).
-   *
-   * As nove portas de módulo têm `sidebar` ausente no catálogo, e isso significa "só no hub"
-   * (`NavMetadata.sidebar`: "Ausente = só no hub"). O filtro do menu lateral é
-   * `d.sidebar || (!group.hub && settings?.destinos)` — então elas NÃO aparecem no menu diário:
-   * só dentro de "Ver tudo em CRM".
-   *
-   * Era essa a causa do relato "liguei e não aparece no CRM": a pessoa ligou, olhou o menu
-   * lateral, e a porta está um clique adentro. E o meu texto dizia "CRM › Empresas", que sugere
-   * menu lateral — ou seja, ele mandava procurar no lugar errado.
-   *
-   * A decisão foi manter a porta no hub (o menu foi medido em 15 itens com folga 0 a 1280×900, e
-   * o hub existe para não reabrir essa corrida) e fazer o texto dizer o caminho de verdade.
+   * ⚠️ A MAIORIA das portas de módulo mora no hub (`sidebar` ausente). Unidades
+   * (`avaliacao`) é a exceção deliberada: sobe ao menu em Atendimento. O resto
+   * continua atrás de "Ver tudo em …" — o menu do núcleo ficou em 15 itens com
+   * folga 0 a 1280×900, e o hub existe para não reabrir essa corrida.
    */
   it("⭐ porta que mora no hub declara o passo do hub", () => {
     const onde = ondeOModuloAparece("crm_b2b");
@@ -196,14 +187,26 @@ describe("o grupo é o que está NA TELA, não o rótulo do modelo de dados", ()
     expect(onde[0]!.label).toBe("Dados externos");
   });
 
-  it("toda porta de módulo é de hub hoje — se alguma subir ao menu, este caso avisa", () => {
-    // Controle de vivacidade com dente: se um dia uma porta de módulo ganhar `sidebar: true`, ela
-    // deixa de precisar do passo do hub e este caso fica vermelho, forçando a revisão do texto.
+  it("porta de módulo sem hub: rodapé (Configurações) ou menu diário (Atendimento)", () => {
+    // Rodapé: o Sidebar já desenha o hub ("Configurações"), sem passo extra.
+    // Atendimento: Unidades (`avaliacao`) sobe ao menu lateral de propósito —
+    // quem opera a agenda precisa da porta no dia a dia, não atrás do hub.
     const comHub = MODULOS_OPCIONAIS.flatMap((m) => ondeOModuloAparece(m)).filter((p) => p.hub);
     const semHub = MODULOS_OPCIONAIS.flatMap((m) => ondeOModuloAparece(m)).filter((p) => !p.hub);
-    // As de `organizacao` (rodapé) não têm `hub`; todas as outras têm.
     expect(comHub.length).toBeGreaterThan(0);
-    expect(semHub.every((p) => p.grupo === "Configurações")).toBe(true);
+    expect(semHub.every((p) => p.grupo === "Configurações" || p.grupo === "Atendimento")).toBe(
+      true,
+    );
+  });
+
+  it("⭐ Unidades (avaliação) sobe ao menu: Atendimento › Unidades, sem hub", () => {
+    const onde = ondeOModuloAparece("avaliacao");
+    const unidades = onde.find((p) => p.href === "/app/unidades");
+    expect(unidades).toEqual({
+      href: "/app/unidades",
+      label: "Unidades",
+      grupo: "Atendimento",
+    });
   });
 
   it("⭐ grupo do rodapé: diz 'Configurações', que é o que o menu escreve", () => {
@@ -371,15 +374,19 @@ describe("nenhum caminho de menu é escrito à mão", () => {
     expect(MODULOS_NA_TELA.filter((m) => m.foraDoMenu).length).toBeGreaterThan(0);
   });
 
-  it("⭐ todo grupo com porta de módulo TEM hub — é o que valida reduzir o filtro a `sidebar`", () => {
-    // `sidebarGroups` filtra por `d.sidebar || (!group.hub && settings?.destinos)`. O segundo termo
-    // depende de `settings`, que esta função não recebe — mas ele só vale para grupo SEM hub. Se
-    // um dia uma porta de módulo cair num grupo sem hub, a redução deixa de valer e este caso
-    // avisa, em vez de o caminho passar a mentir em silêncio.
-    const semHub = MODULOS_OPCIONAIS.flatMap((m) =>
+  it("⭐ porta de módulo em grupo sem hub só sobe se tiver `sidebar: true`", () => {
+    // `ondeOModuloAparece` chama `sobeAoMenuLateral(d, false)` — não conhece a
+    // empresa. O segundo termo (`!group.hub && settings?.destinos`) só vale com
+    // escolha explícita; sem hub e sem `sidebar`, o caminho diria "só no menu"
+    // enquanto a porta fica invisível, ou o contrário com destinos. Unidades
+    // (`avaliacao`) em Atendimento é a exceção deliberada: sobe com `sidebar`.
+    const semHubSemSidebar = MODULOS_OPCIONAIS.flatMap((m) =>
       NAV_CATALOG.filter((d) => (d as { modulo?: string }).modulo === m),
-    ).filter((d) => !NAV_GROUPS.find((g) => g.id === d.group)?.hub);
-    expect(semHub.map((d) => d.href)).toEqual([]);
+    ).filter((d) => {
+      const meta = d as { group: string; sidebar?: boolean };
+      return !NAV_GROUPS.find((g) => g.id === meta.group)?.hub && !meta.sidebar;
+    });
+    expect(semHubSemSidebar.map((d) => d.href)).toEqual([]);
   });
 });
 
