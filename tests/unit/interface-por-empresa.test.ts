@@ -219,6 +219,17 @@ describe("medição da folga (pergunta de aceite da issue #1341)", () => {
     expect(itensNoMenuLateral(INTERFACE_COMPLETA, "admin", ["avaliacao"])).toBe(16);
   });
 
+  it("simplificada + avaliação: Unidades entra no menu (4º item do enxuto)", () => {
+    const hrefsMenu = sidebarGroups(false, "admin", simplificada, ["avaliacao"])
+      .filter((grupo) => grupo.group.id !== GRUPO_NO_RODAPE)
+      .flatMap((grupo) => grupo.items.map((i) => i.href));
+    expect(hrefsMenu).toEqual(
+      expect.arrayContaining(["/app/agenda", "/app/unidades", "/app/contacts", "/app/ai/cases"]),
+    );
+    expect(itensNoMenuLateral(simplificada, "admin", ["avaliacao"])).toBe(4);
+    expect(itensNoMenuLateral(simplificada, "admin", [])).toBe(3);
+  });
+
   it("configuração MÍNIMA (empresa escolhe 1 porta): 1 item, folga 14", () => {
     const minima = combinarInterfaces({ preset: "completa", destinos: ["/app/inbox"] }, completa);
     expect(interfaceTemDestino(minima, "admin")).toBe(true); // a guarda exige ≥1 porta

@@ -19,9 +19,14 @@ describe("interface por vínculo é apresentação", () => {
     expect(hrefs(null)).toEqual(NAV_CATALOG.map((d) => d.href));
     expect(new Set(NAV_CATALOG.map((d) => d.href)).size).toBe(NAV_CATALOG.length);
   });
-  it("simplificada traz Agenda, Contatos e Casos; sem Inbox/Kanban/Conexões", () => {
+  it("simplificada traz Agenda, Unidades, Contatos e Casos; sem Inbox/Kanban/Conexões", () => {
     expect(hrefs(simplified)).toEqual(
-      expect.arrayContaining(["/app/agenda", "/app/contacts", "/app/ai/cases"]),
+      expect.arrayContaining([
+        "/app/agenda",
+        "/app/unidades",
+        "/app/contacts",
+        "/app/ai/cases",
+      ]),
     );
     expect(hrefs(simplified)).not.toContain("/app/inbox");
     expect(hrefs(simplified)).not.toContain("/app/kanban");
