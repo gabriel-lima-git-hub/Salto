@@ -242,18 +242,24 @@ begin
       foreign key (evaluation_record_id) references public.avaliacao_avaliacoes(id) on delete set null;
   end if;
 
+  -- Policies em duas linhas: create policy X / on public.Y — senão a
+  -- conferência do update.sh ≤v1.63.0 (regex numa linha só) cobra regra de
+  -- módulo não instalado e para a atualização (#1906 / ADR-0002).
   alter table public.avaliacao_avaliacoes enable row level security;
   drop policy if exists avaliacao_avaliacoes_select on public.avaliacao_avaliacoes;
-  create policy avaliacao_avaliacoes_select on public.avaliacao_avaliacoes
+  create policy avaliacao_avaliacoes_select
+    on public.avaliacao_avaliacoes
     for select using (organization_id in (select public.fn_user_org_ids()) or public.fn_is_platform_admin());
   drop policy if exists avaliacao_avaliacoes_insert on public.avaliacao_avaliacoes;
-  create policy avaliacao_avaliacoes_insert on public.avaliacao_avaliacoes
+  create policy avaliacao_avaliacoes_insert
+    on public.avaliacao_avaliacoes
     for insert with check (
       public.fn_is_platform_admin()
       or (organization_id in (select public.fn_user_org_ids()) and public.fn_role_at_least(organization_id, 'agent'))
     );
   drop policy if exists avaliacao_avaliacoes_update on public.avaliacao_avaliacoes;
-  create policy avaliacao_avaliacoes_update on public.avaliacao_avaliacoes
+  create policy avaliacao_avaliacoes_update
+    on public.avaliacao_avaliacoes
     for update using (
       public.fn_is_platform_admin()
       or (organization_id in (select public.fn_user_org_ids()) and public.fn_role_at_least(organization_id, 'agent'))
@@ -262,7 +268,8 @@ begin
       or (organization_id in (select public.fn_user_org_ids()) and public.fn_role_at_least(organization_id, 'agent'))
     );
   drop policy if exists avaliacao_avaliacoes_delete on public.avaliacao_avaliacoes;
-  create policy avaliacao_avaliacoes_delete on public.avaliacao_avaliacoes
+  create policy avaliacao_avaliacoes_delete
+    on public.avaliacao_avaliacoes
     for delete using (
       public.fn_is_platform_admin()
       or (organization_id in (select public.fn_user_org_ids()) and public.fn_role_at_least(organization_id, 'manager'))
@@ -271,16 +278,19 @@ begin
 
   alter table public.avaliacao_avaliacao_fotos enable row level security;
   drop policy if exists avaliacao_avaliacao_fotos_select on public.avaliacao_avaliacao_fotos;
-  create policy avaliacao_avaliacao_fotos_select on public.avaliacao_avaliacao_fotos
+  create policy avaliacao_avaliacao_fotos_select
+    on public.avaliacao_avaliacao_fotos
     for select using (organization_id in (select public.fn_user_org_ids()) or public.fn_is_platform_admin());
   drop policy if exists avaliacao_avaliacao_fotos_insert on public.avaliacao_avaliacao_fotos;
-  create policy avaliacao_avaliacao_fotos_insert on public.avaliacao_avaliacao_fotos
+  create policy avaliacao_avaliacao_fotos_insert
+    on public.avaliacao_avaliacao_fotos
     for insert with check (
       public.fn_is_platform_admin()
       or (organization_id in (select public.fn_user_org_ids()) and public.fn_role_at_least(organization_id, 'agent'))
     );
   drop policy if exists avaliacao_avaliacao_fotos_update on public.avaliacao_avaliacao_fotos;
-  create policy avaliacao_avaliacao_fotos_update on public.avaliacao_avaliacao_fotos
+  create policy avaliacao_avaliacao_fotos_update
+    on public.avaliacao_avaliacao_fotos
     for update using (
       public.fn_is_platform_admin()
       or (organization_id in (select public.fn_user_org_ids()) and public.fn_role_at_least(organization_id, 'agent'))
@@ -289,7 +299,8 @@ begin
       or (organization_id in (select public.fn_user_org_ids()) and public.fn_role_at_least(organization_id, 'agent'))
     );
   drop policy if exists avaliacao_avaliacao_fotos_delete on public.avaliacao_avaliacao_fotos;
-  create policy avaliacao_avaliacao_fotos_delete on public.avaliacao_avaliacao_fotos
+  create policy avaliacao_avaliacao_fotos_delete
+    on public.avaliacao_avaliacao_fotos
     for delete using (
       public.fn_is_platform_admin()
       or (organization_id in (select public.fn_user_org_ids()) and public.fn_role_at_least(organization_id, 'agent'))
