@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Avaliações veiculares após o agendamento",
+    "subtitle": "Agenda inicia o assistente; histórico e ficha fecham o laço até Avaliado",
+    "output": "avaliacao-pos-agendamento.html",
+    "quality_profile": "standard"
+  },
+  "lanes": [
+    { "id": "humano", "label": "Telas" },
+    { "id": "api", "label": "API" },
+    { "id": "banco", "label": "Banco" }
+  ],
+  "mainPath": ["agenda", "iniciar", "avaliacoes", "assistente", "concluir", "agendamento"],
+  "nodes": [
+    {
+      "id": "agenda",
+      "lane": "humano",
+      "col": 0,
+      "type": "frontend",
+      "label": "/app/agenda",
+      "sublabel": "Iniciar avaliação no card do agendamento"
+    },
+    {
+      "id": "historico",
+      "lane": "humano",
+      "col": 2,
+      "type": "frontend",
+      "label": "/app/avaliacoes",
+      "sublabel": "Histórico Todas / Concluído / Incompleta"
+    },
+    {
+      "id": "assistente",
+      "lane": "humano",
+      "col": 3,
+      "type": "frontend",
+      "label": "/app/avaliacoes/[id]",
+      "sublabel": "Assistente em etapas + ficha"
+    },
+    {
+      "id": "iniciar",
+      "lane": "api",
+      "col": 1,
+      "type": "api",
+      "label": "POST …/acoes/iniciar_avaliacao",
+      "sublabel": "transição + criar avaliacao_avaliacoes"
+    },
+    {
+      "id": "avaliacoes",
+      "lane": "api",
+      "col": 2,
+      "type": "api",
+      "label": "/api/v1/avaliacao/avaliacoes",
+      "sublabel": "CRUD parcial, fotos, concluir"
+    },
+    {
+      "id": "concluir",
+      "lane": "api",
+      "col": 4,
+      "type": "api",
+      "label": "POST …/concluir",
+      "sublabel": "≥5 fotos + laudo → Avaliado"
+    },
+    {
+      "id": "agendamento",
+      "lane": "banco",
+      "col": 0,
+      "type": "database",
+      "label": "avaliacao_agendamentos",
+      "sublabel": "evaluation_record_id → ficha"
+    },
+    {
+      "id": "ficha",
+      "lane": "banco",
+      "col": 3,
+      "type": "database",
+      "label": "avaliacao_avaliacoes + fotos",
+      "sublabel": "blocos jsonb + storage avaliacao-fotos"
+    }
+  ],
+  "edges": [
+    { "id": "e1", "from": "agenda", "to": "iniciar", "label": "Iniciar" },
+    { "id": "e2", "from": "iniciar", "to": "agendamento", "label": "status em_avaliacao" },
+    { "id": "e3", "from": "iniciar", "to": "ficha", "label": "cria registro" },
+    { "id": "e4", "from": "iniciar", "to": "assistente", "label": "abre" },
+    { "id": "e5", "from": "historico", "to": "avaliacoes", "label": "lista" },
+    { "id": "e6", "from": "avaliacoes", "to": "ficha", "label": "lê/grava" },
+    { "id": "e7", "from": "assistente", "to": "avaliacoes", "label": "salva / fotos" },
+    { "id": "e8", "from": "assistente", "to": "concluir", "label": "conclui" },
+    { "id": "e9", "from": "concluir", "to": "ficha", "label": "concluida_at" },
+    { "id": "e10", "from": "concluir", "to": "agendamento", "label": "status avaliado" }
+  ]
+}

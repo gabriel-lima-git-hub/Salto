@@ -6,6 +6,7 @@ import { ok, fail } from "@/lib/api/wrappers";
 import { audit } from "@/lib/audit";
 import { requireRole } from "@/lib/auth/require-role";
 import { requireSupportWrite } from "@/lib/impersonate/support";
+import { garantirAvaliacaoDoAgendamento } from "@/lib/avaliacao/criar-da-agenda";
 import { MODULO_AVALIACAO_NAO_INSTALADO, moduloAvaliacaoNaoInstalado } from "@/lib/avaliacao/modulo";
 import { ACOES_TRANSICAO } from "@/lib/avaliacao/status";
 import { moduloLigado } from "@/lib/instalacao/modulos";
@@ -55,14 +56,40 @@ export async function POST(_req: NextRequest, ctx: RouteCtx): Promise<Response> 
     return fail("internal_error", error.message, 500, { requestId });
   }
 
+  let avaliacaoId: string | undefined;
+  if (parsedAcao.data === "iniciar_avaliacao") {
+    const criada = await garantirAvaliacaoDoAgendamento(supabase, {
+      organizationId: authz.org.orgId,
+      agendamentoId: id,
+      actorUserId: authz.user.id,
+    });
+    if (!criada.ok) {
+      if (criada.code === "module_not_installed") {
+        return fail("module_not_installed", MODULO_AVALIACAO_NAO_INSTALADO, 409, { requestId });
+      }
+      return fail(
+        criada.code === "not_found" ? "not_found" : "internal_error",
+        criada.message,
+        criada.code === "not_found" ? 404 : 500,
+        { requestId },
+      );
+    }
+    avaliacaoId = criada.avaliacao_id;
+  }
+
   void audit({
     action: "avaliacao.agendamento_acao",
     resourceType: "avaliacao_agendamento",
     resourceId: id,
     organizationId: authz.org.orgId,
     actorUserId: authz.user.id,
-    metadata: { acao: parsedAcao.data, resultado: data },
+    metadata: { acao: parsedAcao.data, resultado: data, avaliacao_id: avaliacaoId ?? null },
   });
 
-  return ok(data, { requestId });
+  return ok(
+    typeof data === "object" && data !== null
+      ? { ...(data as Record<string, unknown>), avaliacao_id: avaliacaoId ?? null }
+      : { resultado: data, avaliacao_id: avaliacaoId ?? null },
+    { requestId },
+  );
 }

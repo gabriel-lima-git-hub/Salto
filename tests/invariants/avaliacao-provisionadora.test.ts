@@ -10,6 +10,16 @@ import { moldeDeProvisionadora } from "./molde-de-provisionadora";
 
 moldeDeProvisionadora({
   modulo: "avaliacao",
-  tabelas: ["avaliacao_unidades", "avaliacao_agendamentos"],
-  protecaoPropria: ["avaliacao_unidades", "avaliacao_agendamentos"],
+  tabelas: [
+    "avaliacao_unidades",
+    "avaliacao_agendamentos",
+    "avaliacao_avaliacoes",
+    "avaliacao_avaliacao_fotos",
+  ],
+  protecaoPropria: [
+    "avaliacao_unidades",
+    "avaliacao_agendamentos",
+    "avaliacao_avaliacoes",
+    "avaliacao_avaliacao_fotos",
+  ],
 });
