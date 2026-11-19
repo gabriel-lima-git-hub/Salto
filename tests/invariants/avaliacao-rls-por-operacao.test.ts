@@ -175,4 +175,26 @@ describe("avaliações pós-agendamento", () => {
     );
     expect(existe("avaliacao_avaliacoes", AV_A)).toBe(true);
   });
+
+  it("viewer da org A não vê foto da org B", () => {
+    const fotoB = "cccccccc-9999-4000-8000-00000000e042";
+    sql(`
+      insert into public.avaliacao_avaliacao_fotos
+        (id, organization_id, avaliacao_id, storage_path, sort_order)
+      values
+        ('${fotoB}', '${ORG_B}', '${AV_B}', '${ORG_B}/${AV_B}/foto.jpg', 0)
+      on conflict (id) do nothing;
+    `);
+    expect(
+      Number(
+        lastLine(
+          sql(`
+            set role authenticated;
+            select set_config('request.jwt.claims', '{"sub":"${GOV_VIEWER}"}', false);
+            select count(*) from public.avaliacao_avaliacao_fotos where id = '${fotoB}';
+          `),
+        ),
+      ),
+    ).toBe(0);
+  });
 });

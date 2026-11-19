@@ -181,6 +181,18 @@ const PROVA_DE_MODULO: Record<string, { readonly arquivo: string; readonly razao
       "Mesmo arquivo: agent insere agendamento, viewer não; delete só manager; status não muda " +
       "direto na sessão (trigger); `fn_avaliacao_transicao_status` recusa transição inválida com JWT.",
   },
+  avaliacao_avaliacoes: {
+    arquivo: "tests/invariants/avaliacao-rls-por-operacao.test.ts",
+    razao:
+      "Mesmo arquivo (0677): agent cria ficha na própria org, viewer não; delete só manager; " +
+      "isolamento cross-tenant — viewer da org A lê zero linhas da ficha da org B.",
+  },
+  avaliacao_avaliacao_fotos: {
+    arquivo: "tests/invariants/avaliacao-rls-por-operacao.test.ts",
+    razao:
+      "Mesma suíte e as policies da provisionadora (agent escreve, manager apaga a ficha); a " +
+      "leitura cross-org por contagem deste arquivo cobre a tabela tenant-aware de fotos.",
+  },
   // #1907 — as cinco tabelas da comanda, que nascem em `fn_financeiro_provisionar()`
   // (ADR-0002 D2/D3). A prova comportamental é a MESMA da lista de leitura
   // org-scoped de `rls-isolation.test.ts`: linha REAL semeada por organização e
@@ -549,6 +561,8 @@ describe("D8 — as varreduras de RLS, security definer e cascata de LGPD com os
     expect(TABELAS_DE_MODULO).toContain("honorarios_parcelas");
     expect(TABELAS_DE_MODULO).toContain("avaliacao_unidades");
     expect(TABELAS_DE_MODULO).toContain("avaliacao_agendamentos");
+    expect(TABELAS_DE_MODULO).toContain("avaliacao_avaliacoes");
+    expect(TABELAS_DE_MODULO).toContain("avaliacao_avaliacao_fotos");
 
     // Os três inventários leem o banco de verdade — guardas de vacuidade do irmão.
     expect(inventarioRls().length, "inventário de RLS vazio").toBeGreaterThanOrEqual(90);
