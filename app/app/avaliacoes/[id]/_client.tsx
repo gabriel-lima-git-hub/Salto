@@ -28,7 +28,7 @@ export function AssistenteAvaliacaoClient({ id }: { id: string }) {
   const { data, isLoading, refetch } = useAvaliacao(id);
   const { salvar, concluir, excluir } = useMutacaoAvaliacao(id);
   const tipo = (data?.tipo as string) || "propria";
-  const etapas = useMemo(
+  const etapas: readonly EtapaAvaliacao[] = useMemo(
     () => (tipo === "repasse" ? ETAPAS_REPASSE : ETAPAS_COMPLETAS),
     [tipo],
   );
@@ -37,7 +37,7 @@ export function AssistenteAvaliacaoClient({ id }: { id: string }) {
   const concluida = !!data?.concluida_at;
 
   useEffect(() => {
-    if (!etapas.includes(etapa)) setEtapa(etapas[0]!);
+    if (!(etapas as readonly string[]).includes(etapa)) setEtapa(etapas[0]!);
   }, [etapas, etapa]);
 
   useEffect(() => {

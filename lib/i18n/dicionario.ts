@@ -15814,7 +15814,6 @@ export const DICIONARIO: Traducoes = {
   Própria: { es: "Propia" },
   Apoio: { es: "Apoyo" },
   Repasse: { es: "Cesión" },
-  Versão: { es: "Versión" },
   "Km atual": { es: "Km actual" },
   Câmbio: { es: "Caja" },
   Combustível: { es: "Combustible" },
