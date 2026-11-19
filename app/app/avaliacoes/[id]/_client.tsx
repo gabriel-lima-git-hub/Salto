@@ -252,7 +252,7 @@ export function AssistenteAvaliacaoClient({ id }: { id: string }) {
                   {!concluida && (
                     <button
                       type="button"
-                      className="absolute right-1 top-1 rounded bg-background/90 px-2 py-0.5 text-xs"
+                      className="absolute right-1 top-1 rounded-md bg-background/90 px-2 py-0.5 text-xs"
                       onClick={async () => {
                         await fetch(
                           `/api/v1/avaliacao/avaliacoes/${id}/fotos?foto_id=${f.id}`,

@@ -15780,6 +15780,9 @@ export const DICIONARIO: Traducoes = {
 
   // Avaliações pós-agendamento (módulo avaliacao)
   Avaliações: { es: "Evaluaciones" },
+  "Histórico de inspeções, assistente em etapas e ficha do veículo.": {
+    es: "Historial de inspecciones, asistente por etapas y ficha del vehículo.",
+  },
   "Nova Avaliação": { es: "Nueva evaluación" },
   "Histórico de inspeções e fichas do veículo.": {
     es: "Historial de inspecciones y fichas del vehículo.",

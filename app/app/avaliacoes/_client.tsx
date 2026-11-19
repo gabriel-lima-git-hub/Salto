@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAvaliacoes } from "@/hooks/avaliacao/useAvaliacoes";
 import { useUnidadesAvaliacao } from "@/hooks/avaliacao/useUnidadesAvaliacao";
+import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { useT } from "@/hooks/i18n/useT";
 import { ROTULO_STATUS_LAUDO, type StatusLaudo } from "@/lib/avaliacao/ficha";
 
@@ -37,6 +38,7 @@ function veiculoDe(veiculo: Record<string, unknown> | null): string {
 
 export function AvaliacoesHistoricoClient() {
   const t = useT();
+  const tagDeIdioma = useTagDeIdioma();
   const [aba, setAba] = useState<"todas" | "concluido" | "incompleta">("todas");
   const [q, setQ] = useState("");
   const [unitId, setUnitId] = useState<string>("");
@@ -136,7 +138,7 @@ export function AvaliacoesHistoricoClient() {
                     </div>
                     <div className="text-muted-foreground">
                       {contato.nome} · {contato.whatsapp} ·{" "}
-                      {new Date(row.created_at).toLocaleString("pt-BR", {
+                      {new Date(row.created_at).toLocaleString(tagDeIdioma, {
                         dateStyle: "short",
                         timeStyle: "short",
                       })}
