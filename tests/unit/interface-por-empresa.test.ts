@@ -211,12 +211,30 @@ describe("medição da folga (pergunta de aceite da issue #1341)", () => {
     expect(15 - itens).toBe(12);
   });
 
-  it("módulo avaliação ligado: Unidades sobe ao menu (16º item)", () => {
+  it("módulo avaliação ligado: Unidades e Avaliações sobem ao menu", () => {
     const hrefs = sidebarGroups(false, "admin", INTERFACE_COMPLETA, ["avaliacao"])
       .filter((grupo) => grupo.group.id !== GRUPO_NO_RODAPE)
       .flatMap((grupo) => grupo.items.map((i) => i.href));
     expect(hrefs).toContain("/app/unidades");
-    expect(itensNoMenuLateral(INTERFACE_COMPLETA, "admin", ["avaliacao"])).toBe(16);
+    expect(hrefs).toContain("/app/avaliacoes");
+    expect(itensNoMenuLateral(INTERFACE_COMPLETA, "admin", ["avaliacao"])).toBe(17);
+  });
+
+  it("simplificada + avaliação: Unidades e Avaliações entram no menu", () => {
+    const hrefsMenu = sidebarGroups(false, "admin", simplificada, ["avaliacao"])
+      .filter((grupo) => grupo.group.id !== GRUPO_NO_RODAPE)
+      .flatMap((grupo) => grupo.items.map((i) => i.href));
+    expect(hrefsMenu).toEqual(
+      expect.arrayContaining([
+        "/app/agenda",
+        "/app/unidades",
+        "/app/avaliacoes",
+        "/app/contacts",
+        "/app/ai/cases",
+      ]),
+    );
+    expect(itensNoMenuLateral(simplificada, "admin", ["avaliacao"])).toBe(5);
+    expect(itensNoMenuLateral(simplificada, "admin", [])).toBe(3);
   });
 
   it("configuração MÍNIMA (empresa escolhe 1 porta): 1 item, folga 14", () => {

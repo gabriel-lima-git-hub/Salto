@@ -23,11 +23,16 @@ export const INTERFACE_COMPLETA: InterfaceSettings = { preset: "completa" };
 export const INTERFACE_SIMPLIFICADA: InterfaceSettings = { preset: "simplificada" };
 /**
  * Preset "simplificada" — além das portas essenciais (perfil, segurança, equipe,
- * empresa): Agenda, Contatos e Casos. CRM e Configurações entram como "Ver tudo"
- * do hub quando há item do grupo. O default da instalação continua `completa`.
+ * empresa): Agenda, Unidades, Avaliações, Contatos e Casos. Unidades/Avaliações
+ * são portas do módulo `avaliacao` (só aparecem com o módulo ligado —
+ * `permitidos` filtra). Agenda, com o módulo ligado, vira a agenda de avaliação.
+ * CRM e Configurações entram como "Ver tudo" do hub quando há item do grupo. O
+ * default da instalação continua `completa`.
  */
 const SIMPLIFICADA: readonly NavDestinationId[] = [
   "/app/agenda",
+  "/app/unidades",
+  "/app/avaliacoes",
   "/app/contacts",
   "/app/ai/cases",
 ];

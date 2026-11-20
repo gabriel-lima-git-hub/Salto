@@ -18,6 +18,8 @@ const UNIT_B = "cccccccc-9999-4000-8000-00000000e002";
 const AG_A = "cccccccc-9999-4000-8000-00000000e011";
 const AG_B = "cccccccc-9999-4000-8000-00000000e012";
 const CONTACT_B = "cccccccc-9999-4000-8000-00000000e021";
+const AV_A = "cccccccc-9999-4000-8000-00000000e031";
+const AV_B = "cccccccc-9999-4000-8000-00000000e032";
 
 function existe(tabela: string, id: string): boolean {
   return lastLine(sql(`select exists(select 1 from public.${tabela} where id = '${id}')::text;`)) === "true";
@@ -47,6 +49,13 @@ beforeAll(() => {
       ('${AG_A}', '${GOV_ORG}', '${GOV_CONTACT_1}', '${UNIT_A}', now() + interval '1 day', 'agendado'),
       ('${AG_B}', '${ORG_B}', '${CONTACT_B}', '${UNIT_B}', now() + interval '1 day', 'agendado')
       on conflict (id) do nothing;
+
+    insert into public.avaliacao_avaliacoes (
+      id, organization_id, contact_id, unit_id, agendamento_id, tipo, status_laudo
+    ) values
+      ('${AV_A}', '${GOV_ORG}', '${GOV_CONTACT_1}', '${UNIT_A}', '${AG_A}', 'propria', 'incompleta'),
+      ('${AV_B}', '${ORG_B}', '${CONTACT_B}', '${UNIT_B}', '${AG_B}', 'propria', 'incompleta')
+      on conflict (id) do nothing;
   `);
 });
 
@@ -59,6 +68,20 @@ describe("isolamento cross-tenant", () => {
             set role authenticated;
             select set_config('request.jwt.claims', '{"sub":"${GOV_VIEWER}"}', false);
             select count(*) from public.avaliacao_agendamentos where id = '${AG_B}';
+          `),
+        ),
+      ),
+    ).toBe(0);
+  });
+
+  it("viewer da org A não vê avaliação da org B", () => {
+    expect(
+      Number(
+        lastLine(
+          sql(`
+            set role authenticated;
+            select set_config('request.jwt.claims', '{"sub":"${GOV_VIEWER}"}', false);
+            select count(*) from public.avaliacao_avaliacoes where id = '${AV_B}';
           `),
         ),
       ),
@@ -122,5 +145,56 @@ describe("fn_avaliacao_transicao_status", () => {
         );
       `),
     ).toThrow();
+  });
+});
+
+describe("avaliações pós-agendamento", () => {
+  it("agent cria avaliação na própria org", () => {
+    expect(
+      writeCountAs(
+        GOV_AGENT_A,
+        `insert into public.avaliacao_avaliacoes (organization_id, contact_id, unit_id, tipo, status_laudo)
+         values ('${GOV_ORG}', '${GOV_CONTACT_1}', '${UNIT_A}', 'propria', 'incompleta')`,
+      ),
+    ).toBe(1);
+  });
+
+  it("viewer não cria avaliação", () => {
+    expect(
+      writeCountAs(
+        GOV_VIEWER,
+        `insert into public.avaliacao_avaliacoes (organization_id, contact_id, unit_id, tipo, status_laudo)
+         values ('${GOV_ORG}', '${GOV_CONTACT_1}', '${UNIT_A}', 'propria', 'incompleta')`,
+      ),
+    ).toBe(0);
+  });
+
+  it("agent não apaga avaliação — delete exige manager", () => {
+    expect(writeCountAs(GOV_AGENT_A, `delete from public.avaliacao_avaliacoes where id = '${AV_A}'`)).toBe(
+      0,
+    );
+    expect(existe("avaliacao_avaliacoes", AV_A)).toBe(true);
+  });
+
+  it("viewer da org A não vê foto da org B", () => {
+    const fotoB = "cccccccc-9999-4000-8000-00000000e042";
+    sql(`
+      insert into public.avaliacao_avaliacao_fotos
+        (id, organization_id, avaliacao_id, storage_path, sort_order)
+      values
+        ('${fotoB}', '${ORG_B}', '${AV_B}', '${ORG_B}/${AV_B}/foto.jpg', 0)
+      on conflict (id) do nothing;
+    `);
+    expect(
+      Number(
+        lastLine(
+          sql(`
+            set role authenticated;
+            select set_config('request.jwt.claims', '{"sub":"${GOV_VIEWER}"}', false);
+            select count(*) from public.avaliacao_avaliacao_fotos where id = '${fotoB}';
+          `),
+        ),
+      ),
+    ).toBe(0);
   });
 });

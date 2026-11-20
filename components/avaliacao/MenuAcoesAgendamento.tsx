@@ -88,10 +88,7 @@ export function MenuAcoesAgendamento({
         {podeIniciar && (
           <>
             <DropdownMenuSeparator />
-            <IniciarAvaliacaoDialog
-              agendamentoId={agendamento.id}
-              onConfirm={() => acao.mutate({ id: agendamento.id, acao: "iniciar_avaliacao" })}
-            />
+            <IniciarAvaliacaoDialog agendamentoId={agendamento.id} />
           </>
         )}
         <DropdownMenuSeparator />

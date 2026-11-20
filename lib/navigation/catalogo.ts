@@ -212,6 +212,18 @@ export const NAV_CATALOG = [
     modulo: "avaliacao",
   },
   {
+    // Histórico + assistente pós-agendamento (Avaliasys §2). Com o módulo
+    // ligado, sobe ao menu ao lado de Agenda/Unidades.
+    href: "/app/avaliacoes",
+    label: "Avaliações",
+    description: "Histórico de inspeções, assistente em etapas e ficha do veículo.",
+    icon: "ClipboardText",
+    group: "atendimento",
+    sidebar: true,
+    minRole: "viewer",
+    modulo: "avaliacao",
+  },
+  {
     // Renomeado de "Templates": estes são scripts do atendente, consumidos pelo
     // Composer do inbox. O nome "Templates" fica livre para os da Meta (HSM),
     // onde é o termo técnico correto.

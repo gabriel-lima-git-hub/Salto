@@ -199,12 +199,16 @@ describe("o grupo é o que está NA TELA, não o rótulo do modelo de dados", ()
     );
   });
 
-  it("⭐ Unidades (avaliação) sobe ao menu: Atendimento › Unidades, sem hub", () => {
+  it("⭐ Unidades e Avaliações sobem ao menu em Atendimento, sem hub", () => {
     const onde = ondeOModuloAparece("avaliacao");
-    const unidades = onde.find((p) => p.href === "/app/unidades");
-    expect(unidades).toEqual({
+    expect(onde.find((p) => p.href === "/app/unidades")).toEqual({
       href: "/app/unidades",
       label: "Unidades",
+      grupo: "Atendimento",
+    });
+    expect(onde.find((p) => p.href === "/app/avaliacoes")).toEqual({
+      href: "/app/avaliacoes",
+      label: "Avaliações",
       grupo: "Atendimento",
     });
   });
