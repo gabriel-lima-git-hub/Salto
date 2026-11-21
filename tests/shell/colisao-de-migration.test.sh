@@ -124,6 +124,12 @@ GH
 chmod +x "$TMP/bin/gh"
 export PATH="$TMP/bin:$PATH"
 unset FAKE_GH_PRS FAKE_GH_PRS_FECHADOS FAKE_GH_PAI FAKE_GH_SEM_NUMERO
+# O CI de um PR real exporta GITHUB_REF=refs/pull/N/merge. Sem isto, se o PR sob
+# teste for o #7 (número que a suíte usa como fixture de "PR aberto de terceiro"),
+# o gate trata o #7 FAKE como "o seu" (`O seu fica fora: #7`) e os casos 16–23/27/29
+# ficam vermelhos pelo motivo errado — medido no verify-parte(4) do release/1.82.0
+# (PR #7 desta casa).
+unset GITHUB_REF GITHUB_HEAD_REF GITHUB_BASE_REF
 
 # ── um "repositório principal" mínimo, com duas migrations já aplicadas ──────────────
 principal="$TMP/principal"; mkdir -p "$principal/supabase/migrations"
@@ -189,7 +195,12 @@ clonar() { # $1 = destino (traz o gate SOB PROVA, a versão da árvore de trabal
   clonar_ou_falhar "$principal" "$1"
   mkdir -p "$1/scripts"; cp "$GATE_ORIGEM" "$1/scripts/checar-colisao-de-migration.sh"
 }
-gate() { ( cd "$1" && bash scripts/checar-colisao-de-migration.sh "${2:-origin/main}" 2>&1 ); }
+# Subshell limpa GITHUB_REF*: o CI do PR real injeta refs/pull/N/merge, e o N da
+# suíte (ex.: #7) passaria a ser "o seu" — ver unset acima.
+gate() {
+  ( unset GITHUB_REF GITHUB_HEAD_REF GITHUB_BASE_REF
+    cd "$1" && bash scripts/checar-colisao-de-migration.sh "${2:-origin/main}" 2>&1 )
+}
 migrar() { printf 'select 9;\n' > "$1/supabase/migrations/$2"; }
 commit() { git -C "$1" add -A >/dev/null && git -C "$1" commit -q -m "$2"; }
 
@@ -376,7 +387,8 @@ pr_no_principal() { # $1 = número do PR, $2 = nome da migration que a cabeça d
   [ "$push_ok" = 1 ] || { echo "pr_no_principal: push para refs/pull/$1/head falhou 3x" >&2; exit 90; }
 }
 gate_prs() { # $1 = PRs abertos que o gh falso lista, $2 = clone
-  ( export FAKE_GH_PRS="$1"; cd "$2" && bash scripts/checar-colisao-de-migration.sh origin/main 2>&1 )
+  ( unset GITHUB_REF GITHUB_HEAD_REF GITHUB_BASE_REF
+    export FAKE_GH_PRS="$1"; cd "$2" && bash scripts/checar-colisao-de-migration.sh origin/main 2>&1 )
 }
 pr_no_principal 7 "20260917100000_0276_do_fork.sql"
 pr_no_principal 9 "20260917120000_0400_abandonado.sql"
@@ -396,6 +408,18 @@ assert_exit "$code" 0 "número de outro PR não reprova — quem entrar primeiro
 # também não provaria nada — o próprio PR tem 0276. Quem prova o teto vindo do fork é o 17.
 assert_contains "$saida" "::warning file=supabase/migrations/20260917110000_0276_meu.sql::NNNN=0276" "avisa NO ARQUIVO que colide"
 assert_contains "$saida" "PR aberto #7" "nomeia O PR que tem o mesmo número"
+
+echo "16b. GITHUB_REF do CI (PR real #7) não engole o fixture #7"
+# Controlo da isolação: no verify-parte(4) do release/1.82.0 o GITHUB_REF=refs/pull/7/merge
+# fazia o gate pular o fixture #7 ("O seu fica fora") e 9 casos caíam.
+c="$TMP/c16b"; clonar "$c"; git -C "$c" switch -q -c fix/pr
+migrar "$c" "20260917110500_0263_livre.sql"; commit "$c" "PR com número livre"
+export GITHUB_REF=refs/pull/7/merge
+saida="$(gate_prs "7" "$c")"; code=$?
+unset GITHUB_REF
+assert_exit "$code" 0 "GITHUB_REF do CI não reprova o PR sob teste"
+assert_contains "$saida" "NNNN=0277" "o fixture #7 continua no teto"
+assert_not_contains "$saida" "O seu fica fora" "o #7 FAKE não vira 'o seu' por causa do CI"
 
 echo "17. cabeça de PR FECHADO não entra: a população é a lista de ABERTOS, nunca o curinga"
 c="$TMP/c17"; clonar "$c"; git -C "$c" switch -q -c fix/pr
