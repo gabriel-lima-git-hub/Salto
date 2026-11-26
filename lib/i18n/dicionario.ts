@@ -15755,6 +15755,13 @@ export const DICIONARIO: Traducoes = {
   "Dados do veículo preenchidos pela placa.": {
     es: "Datos del vehículo rellenados por la placa.",
   },
+  "Marca e modelo são preenchidos pela consulta da placa.": {
+    es: "La marca y el modelo se rellenan con la consulta de la placa.",
+  },
+  "A consulta não devolveu o veículo. Informe marca e modelo.": {
+    es: "La consulta no devolvió el vehículo. Indica la marca y el modelo.",
+  },
+  "Consulte a placa primeiro": { es: "Consulta la placa primero" },
   "Ano de fabricação": { es: "Año de fabricación" },
   "Ano modelo": { es: "Año modelo" },
   "Agendamento atualizado.": { es: "Cita actualizada." },

@@ -18,8 +18,22 @@ describe("criarAgendamentoSchema", () => {
       client_name: "Maria",
       client_phone: "11999998888",
       consultant_auto: true,
+      vehicle_plate: "abc-1d23",
     });
     expect(r.success).toBe(true);
+    if (!r.success) return;
+    expect(r.data.vehicle_plate).toBe("ABC1D23");
+  });
+
+  it("recusa criar sem placa ou com placa inválida", () => {
+    const base = {
+      unit_id: UNIT,
+      scheduled_at: "2026-11-12T12:00:00.000Z",
+      client_name: "Maria",
+      client_phone: "11999998888",
+    };
+    expect(criarAgendamentoSchema.safeParse(base).success).toBe(false);
+    expect(criarAgendamentoSchema.safeParse({ ...base, vehicle_plate: "ABC" }).success).toBe(false);
   });
 
   it("recusa sem contato e sem nome/telefone", () => {
@@ -73,6 +87,10 @@ describe("atualizarAgendamentoSchema", () => {
     expect(vazio.success).toBe(false);
 
     const soNotas = atualizarAgendamentoSchema.safeParse({ notes: "remarcar" });
+    const placa = atualizarAgendamentoSchema.safeParse({ vehicle_plate: "abc-1d23" });
+    expect(placa.success).toBe(true);
+    if (placa.success) expect(placa.data.vehicle_plate).toBe("ABC1D23");
+    expect(atualizarAgendamentoSchema.safeParse({ vehicle_plate: "XXX" }).success).toBe(false);
     expect(soNotas.success).toBe(true);
     if (!soNotas.success) return;
     expect(soNotas.data).toEqual({ notes: "remarcar" });

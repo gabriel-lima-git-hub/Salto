@@ -1,7 +1,20 @@
 import { z } from "zod";
 
+import { normalizarPlaca } from "@/lib/apibrasil/mapear-veiculo";
+
 import { normalizarCnpjUnidade } from "./cnpj-unidade";
 import { STATUS_AVALIACAO } from "./status";
+
+const MENSAGEM_PLACA = "Informe uma placa válida (ex.: ABC1D23 ou ABC1234).";
+
+/** Ausente no PATCH. No POST, o superRefine exige uma placa que passe daqui. */
+const placaCampo = z
+  .string()
+  .trim()
+  .max(16)
+  .refine((v) => normalizarPlaca(v) !== null, { message: MENSAGEM_PLACA })
+  .transform((v) => normalizarPlaca(v) as string)
+  .optional();
 
 const textoOpcional = (max: number) =>
   z
@@ -35,7 +48,7 @@ const agendamentoCorpoSchema = z.object({
   attendant_user_id: z.string().uuid().nullable().optional(),
   scheduled_at: z.string().datetime({ offset: true }),
   duration_minutes: z.number().int().min(20).max(120).default(20),
-  vehicle_plate: z.string().trim().max(16).optional(),
+  vehicle_plate: placaCampo,
   vehicle_brand: z.string().trim().max(80).optional(),
   vehicle_model: z.string().trim().max(80).optional(),
   notes: z.string().trim().max(4000).optional(),
@@ -47,6 +60,13 @@ export const criarAgendamentoSchema = agendamentoCorpoSchema.superRefine((v, ctx
     ctx.addIssue({
       code: "custom",
       message: "Informe o contato existente ou nome e WhatsApp do cliente.",
+    });
+  }
+  if (!v.vehicle_plate) {
+    ctx.addIssue({
+      code: "custom",
+      message: MENSAGEM_PLACA,
+      path: ["vehicle_plate"],
     });
   }
 });
