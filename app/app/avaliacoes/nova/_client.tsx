@@ -113,7 +113,7 @@ export function NovaAvaliacaoClient() {
         </select>
       </label>
       <div className="space-y-2">
-        <label className="space-y-1 text-sm">
+        <label className="block space-y-1 text-sm">
           <span>{t("Placa")}</span>
           <div className="flex gap-2">
             <Input

@@ -94,9 +94,9 @@ describe("createApiBrasilVeiculoClient", () => {
       expect(r.data.ano_modelo).toBe(2020);
     }
     expect(fetchFn).toHaveBeenCalledTimes(1);
-    const [url, init] = fetchFn.mock.calls[0]!;
-    expect(String(url)).toContain("/consulta/veiculos/credits");
-    expect(JSON.parse(String((init as RequestInit).body))).toEqual({
+    const chamada = fetchFn.mock.calls[0] as unknown as [string, RequestInit];
+    expect(String(chamada[0])).toContain("/consulta/veiculos/credits");
+    expect(JSON.parse(String(chamada[1].body))).toEqual({
       tipo: "agregados-v2",
       placa: "ABC1234",
       homolog: false,

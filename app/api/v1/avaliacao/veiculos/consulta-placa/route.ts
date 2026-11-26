@@ -76,7 +76,8 @@ export async function POST(req: NextRequest): Promise<Response> {
   void audit({
     action: "avaliacao.placa_consultada",
     resourceType: "avaliacao_veiculo",
-    resourceId: resultado.data.placa,
+    // Placa não é uuid — a coluna resource_id estoura o INSERT se receber chave natural.
+    resourceId: null,
     organizationId: orgId,
     actorUserId: authz.user.id,
     requestId,
