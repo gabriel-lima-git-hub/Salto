@@ -19,10 +19,12 @@ import {
 } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
+import { useConsultaPlaca } from "@/hooks/avaliacao/useConsultaPlaca";
 import { useContatoPorTelefone } from "@/hooks/avaliacao/useContatoPorTelefone";
 import type { UnidadeAvaliacao } from "@/hooks/avaliacao/useUnidadesAvaliacao";
 import { useT } from "@/hooks/i18n/useT";
 import { useAssignableMembers } from "@/hooks/inbox/useAssignableMembers";
+import { flagsCatalogoParaUi } from "@/lib/apibrasil/mapear-veiculo";
 import { apiClient } from "@/lib/api/client";
 import {
   ehMarcaDoCatalogo,
@@ -87,6 +89,7 @@ export function FormularioAgendamento({
   const [notas, setNotas] = useState("");
 
   const contatoLookup = useContatoPorTelefone(telefone);
+  const consultaPlaca = useConsultaPlaca();
   const modelosDisponiveis = useMemo(() => modelosDaMarca(marca), [marca]);
 
   useEffect(() => {
@@ -364,7 +367,34 @@ export function FormularioAgendamento({
             />
             <div className="space-y-2">
               <Label htmlFor="av-placa">{t("Placa")}</Label>
-              <Input id="av-placa" value={placa} onChange={(e) => setPlaca(e.target.value.toUpperCase())} />
+              <div className="flex gap-2">
+                <Input
+                  id="av-placa"
+                  value={placa}
+                  onChange={(e) => setPlaca(e.target.value.toUpperCase())}
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={!placa.trim() || consultaPlaca.isPending}
+                  onClick={() => {
+                    consultaPlaca.mutate(placa, {
+                      onSuccess: (veiculo) => {
+                        setPlaca(veiculo.placa);
+                        const flags = flagsCatalogoParaUi(veiculo);
+                        setMarca(flags.marca);
+                        setMarcaManual(flags.marcaManual);
+                        setModelo(flags.modelo);
+                        setModeloManual(flags.modeloManual);
+                        toast.success(t("Dados do veículo preenchidos pela placa."));
+                      },
+                    });
+                  }}
+                >
+                  {consultaPlaca.isPending ? t("Consultando…") : t("Consultar placa")}
+                </Button>
+              </div>
             </div>
           </section>
 

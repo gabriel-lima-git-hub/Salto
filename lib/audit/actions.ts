@@ -682,6 +682,7 @@ export const AUDIT_ACTIONS = [
   "avaliacao.avaliacao_excluida",
   "avaliacao.foto_adicionada",
   "avaliacao.foto_removida",
+  "avaliacao.placa_consultada",
   "fidelidade.ponto_dado",
   "fidelidade.ponto_resgatado",
   "financeiro.recorrencia_gerada",

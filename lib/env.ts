@@ -275,6 +275,15 @@ const schema = z.object({
   // é `canalGraphParceiroLigado()` em `lib/channels/graph-parceiro/credentials.ts`.
   DATAFY_ENABLED: z.string().optional().default(""),
 
+  // ─── API Brasil — consulta de placa (módulo avaliacao) ───
+  //
+  // Opcional. Vazio = o botão "Consultar placa" responde que a instalação não
+  // configurou o token (503). Quem opera a VPS cola o Bearer do painel
+  // APIBrasil; a chamada é cobrada por consulta (`homolog: false`).
+  APIBRASIL_BEARER_TOKEN: z.string().optional().default(""),
+  // Base do gateway. Vazio usa a produção documentada.
+  APIBRASIL_BASE_URL: z.string().optional().default(""),
+
   // Upstash Redis
   UPSTASH_REDIS_REST_URL: required("UPSTASH_REDIS_REST_URL"),
   UPSTASH_REDIS_REST_TOKEN: required("UPSTASH_REDIS_REST_TOKEN"),
