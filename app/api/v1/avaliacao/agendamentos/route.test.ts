@@ -121,6 +121,7 @@ describe("POST /api/v1/avaliacao/agendamentos", () => {
     client_name: "Maria",
     client_phone: "11999998888",
     consultant_auto: true,
+    vehicle_plate: "ABC1D23",
   };
 
   function postReq(body: unknown): NextRequest {
@@ -174,6 +175,7 @@ describe("POST /api/v1/avaliacao/agendamentos", () => {
       contact_id: "cccccccc-3333-4000-8000-000000000001",
       status: "agendado",
       scheduled_at: corpoValido.scheduled_at,
+      vehicle_plate: "ABC1D23",
     });
     expect(inserted[0]).not.toHaveProperty("consultant_auto");
     expect(inserted[0]).not.toHaveProperty("client_name");

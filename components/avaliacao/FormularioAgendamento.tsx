@@ -24,8 +24,9 @@ import { useContatoPorTelefone } from "@/hooks/avaliacao/useContatoPorTelefone";
 import type { UnidadeAvaliacao } from "@/hooks/avaliacao/useUnidadesAvaliacao";
 import { useT } from "@/hooks/i18n/useT";
 import { useAssignableMembers } from "@/hooks/inbox/useAssignableMembers";
-import { flagsCatalogoParaUi } from "@/lib/apibrasil/mapear-veiculo";
+import { flagsCatalogoParaUi, normalizarPlaca } from "@/lib/apibrasil/mapear-veiculo";
 import { apiClient } from "@/lib/api/client";
+import { liberarMarcaModeloAposConsulta } from "@/lib/avaliacao/consulta-placa-agendamento";
 import {
   ehMarcaDoCatalogo,
   ehModeloDoCatalogo,
@@ -86,6 +87,10 @@ export function FormularioAgendamento({
   const [modelo, setModelo] = useState("");
   const [marcaManual, setMarcaManual] = useState(false);
   const [modeloManual, setModeloManual] = useState(false);
+  /** Placa cuja marca/modelo atuais ainda valem. Mudou a placa, o par sai. */
+  const [placaVinculada, setPlacaVinculada] = useState<string | null>(null);
+  /** Só depois que a consulta não devolve o veículo. */
+  const [marcaModeloLiberados, setMarcaModeloLiberados] = useState(false);
   const [notas, setNotas] = useState("");
 
   const contatoLookup = useContatoPorTelefone(telefone);
@@ -108,7 +113,10 @@ export function FormularioAgendamento({
       setHora(
         `${String(quando.getHours()).padStart(2, "0")}:${String(quando.getMinutes()).padStart(2, "0")}`,
       );
-      setPlaca(edicao.vehicle_plate ?? "");
+      const placaSalva = edicao.vehicle_plate ?? "";
+      setPlaca(placaSalva);
+      setPlacaVinculada(normalizarPlaca(placaSalva));
+      setMarcaModeloLiberados(false);
       const brand = edicao.vehicle_brand ?? "";
       const model = edicao.vehicle_model ?? "";
       // Compatível com legado: valor fora do catálogo = preenchimento manual.
@@ -131,6 +139,8 @@ export function FormularioAgendamento({
       setData(prefillData ?? format(new Date(), "yyyy-MM-dd"));
       setHora(prefillHora ?? "09:00");
       setPlaca("");
+      setPlacaVinculada(null);
+      setMarcaModeloLiberados(false);
       setMarca("");
       setModelo("");
       setMarcaManual(false);
@@ -157,6 +167,10 @@ export function FormularioAgendamento({
       if (!data || !hora) {
         throw new Error("Informe data e horário do agendamento.");
       }
+      const placaOk = normalizarPlaca(placa);
+      if (!placaOk) {
+        throw new Error("Informe uma placa válida (ex.: ABC1D23 ou ABC1234).");
+      }
       const quando = new Date(`${data}T${hora}:00`);
       if (Number.isNaN(quando.getTime())) {
         throw new Error("Data ou horário inválidos.");
@@ -172,7 +186,7 @@ export function FormularioAgendamento({
         client_email: email.trim() || undefined,
         consultant_user_id: consultantAuto ? null : consultantId || null,
         attendant_user_id: attendantId || null,
-        vehicle_plate: placa.trim() || undefined,
+        vehicle_plate: placaOk,
         vehicle_brand: marca.trim() || undefined,
         vehicle_model: modelo.trim() || undefined,
         notes: notas.trim() || undefined,
@@ -322,12 +336,70 @@ export function FormularioAgendamento({
 
           <section className="space-y-3">
             <h3 className="text-sm font-medium">{t("Veículo")}</h3>
+            <div className="space-y-2">
+              <Label htmlFor="av-placa">{t("Placa")}</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="av-placa"
+                  value={placa}
+                  required
+                  autoComplete="off"
+                  onChange={(e) => {
+                    const next = e.target.value.toUpperCase();
+                    setPlaca(next);
+                    if (normalizarPlaca(next) === placaVinculada) return;
+                    setPlacaVinculada(null);
+                    setMarcaModeloLiberados(false);
+                    setMarca("");
+                    setModelo("");
+                    setMarcaManual(false);
+                    setModeloManual(false);
+                  }}
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={!placa.trim() || consultaPlaca.isPending}
+                  onClick={() => {
+                    consultaPlaca.mutate(placa, {
+                      onSuccess: (veiculo) => {
+                        setPlaca(veiculo.placa);
+                        setPlacaVinculada(veiculo.placa);
+                        setMarcaModeloLiberados(false);
+                        const flags = flagsCatalogoParaUi(veiculo);
+                        setMarca(flags.marca);
+                        setMarcaManual(flags.marcaManual);
+                        setModelo(flags.modelo);
+                        setModeloManual(flags.modeloManual);
+                        toast.success(t("Dados do veículo preenchidos pela placa."));
+                      },
+                      onError: (err) => {
+                        if (!liberarMarcaModeloAposConsulta(err)) return;
+                        setMarcaModeloLiberados(true);
+                      },
+                    });
+                  }}
+                >
+                  {consultaPlaca.isPending ? t("Consultando…") : t("Consultar placa")}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {marcaModeloLiberados
+                  ? t("A consulta não devolveu o veículo. Informe marca e modelo.")
+                  : t("Marca e modelo são preenchidos pela consulta da placa.")}
+              </p>
+            </div>
             <SeletorCatalogoComManual
               id="av-marca"
               rotulo={t("Marca")}
               valor={marca}
               manual={marcaManual}
               opcoes={MARCAS_CATALOGO}
+              desabilitado={!marcaModeloLiberados}
+              placeholderVazio={
+                marcaModeloLiberados ? t("Opcional") : t("Consulte a placa primeiro")
+              }
               onChange={({ valor, manual }) => {
                 setMarca(valor);
                 setMarcaManual(manual);
@@ -352,50 +424,21 @@ export function FormularioAgendamento({
               manual={modeloManual || marcaManual}
               travarManual={marcaManual}
               opcoes={modelosDisponiveis}
-              desabilitado={!marca.trim()}
+              desabilitado={!marcaModeloLiberados || !marca.trim()}
               placeholderVazio={
-                !marca.trim()
-                  ? t("Selecione a marca primeiro")
-                  : modelosDisponiveis.length === 0 && !modeloManual && !marcaManual
-                    ? t("Nenhum modelo na base — use “Não encontrou?”")
-                    : t("Opcional")
+                !marcaModeloLiberados
+                  ? t("Consulte a placa primeiro")
+                  : !marca.trim()
+                    ? t("Selecione a marca primeiro")
+                    : modelosDisponiveis.length === 0 && !modeloManual && !marcaManual
+                      ? t("Nenhum modelo na base — use “Não encontrou?”")
+                      : t("Opcional")
               }
               onChange={({ valor, manual }) => {
                 setModelo(valor);
                 setModeloManual(manual || marcaManual);
               }}
             />
-            <div className="space-y-2">
-              <Label htmlFor="av-placa">{t("Placa")}</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="av-placa"
-                  value={placa}
-                  onChange={(e) => setPlaca(e.target.value.toUpperCase())}
-                  className="flex-1"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={!placa.trim() || consultaPlaca.isPending}
-                  onClick={() => {
-                    consultaPlaca.mutate(placa, {
-                      onSuccess: (veiculo) => {
-                        setPlaca(veiculo.placa);
-                        const flags = flagsCatalogoParaUi(veiculo);
-                        setMarca(flags.marca);
-                        setMarcaManual(flags.marcaManual);
-                        setModelo(flags.modelo);
-                        setModeloManual(flags.modeloManual);
-                        toast.success(t("Dados do veículo preenchidos pela placa."));
-                      },
-                    });
-                  }}
-                >
-                  {consultaPlaca.isPending ? t("Consultando…") : t("Consultar placa")}
-                </Button>
-              </div>
-            </div>
           </section>
 
           <section className="space-y-2">
