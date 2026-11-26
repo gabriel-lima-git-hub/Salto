@@ -3,14 +3,15 @@
   "diagram_type": "architecture",
   "meta": {
     "title": "Avaliações veiculares após o agendamento",
-    "subtitle": "Agenda inicia o assistente; histórico e ficha fecham o laço até Avaliado",
+    "subtitle": "Agenda inicia o assistente; consulta de placa pré-preenche; histórico e ficha fecham o laço até Avaliado",
     "output": "avaliacao-pos-agendamento.html",
     "quality_profile": "standard"
   },
   "lanes": [
     { "id": "humano", "label": "Telas" },
     { "id": "api", "label": "API" },
-    { "id": "banco", "label": "Banco" }
+    { "id": "banco", "label": "Banco" },
+    { "id": "externo", "label": "Externo" }
   ],
   "mainPath": ["agenda", "iniciar", "avaliacoes", "assistente", "concluir", "agendamento"],
   "nodes": [
@@ -20,7 +21,7 @@
       "col": 0,
       "type": "frontend",
       "label": "/app/agenda",
-      "sublabel": "Iniciar avaliação no card do agendamento"
+      "sublabel": "Iniciar avaliação + Consultar placa"
     },
     {
       "id": "historico",
@@ -36,7 +37,7 @@
       "col": 3,
       "type": "frontend",
       "label": "/app/avaliacoes/[id]",
-      "sublabel": "Assistente em etapas + ficha"
+      "sublabel": "Assistente em etapas + ficha + placa"
     },
     {
       "id": "iniciar",
@@ -53,6 +54,14 @@
       "type": "api",
       "label": "/api/v1/avaliacao/avaliacoes",
       "sublabel": "CRUD parcial, fotos, concluir"
+    },
+    {
+      "id": "consulta-placa",
+      "lane": "api",
+      "col": 1,
+      "type": "api",
+      "label": "POST …/veiculos/consulta-placa",
+      "sublabel": "RBAC + rate limit + audit"
     },
     {
       "id": "concluir",
@@ -77,6 +86,14 @@
       "type": "database",
       "label": "avaliacao_avaliacoes + fotos",
       "sublabel": "blocos jsonb + storage avaliacao-fotos"
+    },
+    {
+      "id": "apibrasil",
+      "lane": "externo",
+      "col": 1,
+      "type": "external",
+      "label": "API Brasil agregados-v2",
+      "sublabel": "consulta por placa (crédito)"
     }
   ],
   "edges": [
@@ -89,6 +106,11 @@
     { "id": "e7", "from": "assistente", "to": "avaliacoes", "label": "salva / fotos" },
     { "id": "e8", "from": "assistente", "to": "concluir", "label": "conclui" },
     { "id": "e9", "from": "concluir", "to": "ficha", "label": "concluida_at" },
-    { "id": "e10", "from": "concluir", "to": "agendamento", "label": "status avaliado" }
+    { "id": "e10", "from": "concluir", "to": "agendamento", "label": "status avaliado" },
+    { "id": "e11", "from": "agenda", "to": "consulta-placa", "label": "Consultar placa" },
+    { "id": "e12", "from": "assistente", "to": "consulta-placa", "label": "Consultar placa" },
+    { "id": "e13", "from": "consulta-placa", "to": "apibrasil", "label": "POST credits" },
+    { "id": "e14", "from": "consulta-placa", "to": "agenda", "label": "marca/modelo" },
+    { "id": "e15", "from": "consulta-placa", "to": "assistente", "label": "veículo jsonb" }
   ]
 }

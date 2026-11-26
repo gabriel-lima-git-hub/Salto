@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAvaliacao, useMutacaoAvaliacao } from "@/hooks/avaliacao/useAvaliacoes";
+import { useConsultaPlaca } from "@/hooks/avaliacao/useConsultaPlaca";
 import { useT } from "@/hooks/i18n/useT";
 import { apiClient } from "@/lib/api/client";
 import {
@@ -27,6 +28,7 @@ export function AssistenteAvaliacaoClient({ id }: { id: string }) {
   const router = useRouter();
   const { data, isLoading, refetch } = useAvaliacao(id);
   const { salvar, concluir, excluir } = useMutacaoAvaliacao(id);
+  const consultaPlaca = useConsultaPlaca();
   const tipo = (data?.tipo as string) || "propria";
   const etapas: readonly EtapaAvaliacao[] = useMemo(
     () => (tipo === "repasse" ? ETAPAS_REPASSE : ETAPAS_COMPLETAS),
@@ -175,11 +177,39 @@ export function AssistenteAvaliacaoClient({ id }: { id: string }) {
                 void persist({ cliente_responsaveis: { ...cliente, whatsapp: v } })
               }
             />
-            <Campo
-              label={t("Placa")}
+            <CampoPlacaComConsulta
               value={String(veiculo.placa ?? "")}
               disabled={concluida}
-              onChange={(v) => void persist({ veiculo: { ...veiculo, placa: v } })}
+              consultando={consultaPlaca.isPending}
+              rotuloPlaca={t("Placa")}
+              rotuloBotao={
+                consultaPlaca.isPending ? t("Consultando…") : t("Consultar placa")
+              }
+              onChangePlaca={(placa) => void persist({ veiculo: { ...veiculo, placa } })}
+              onConsultar={(placa) => {
+                consultaPlaca.mutate(placa, {
+                  onSuccess: (v) => {
+                    void salvar
+                      .mutateAsync({
+                        veiculo: {
+                          ...veiculo,
+                          placa: v.placa,
+                          marca: v.marca,
+                          modelo: v.modelo,
+                          ...(v.versao ? { versao: v.versao } : {}),
+                          ano_fabricacao: v.ano_fabricacao ?? null,
+                          ano_modelo: v.ano_modelo ?? null,
+                          ...(v.cambio ? { cambio: v.cambio } : {}),
+                          ...(v.combustivel ? { combustivel: v.combustivel } : {}),
+                        },
+                      })
+                      .then(async () => {
+                        toast.success(t("Dados do veículo preenchidos pela placa."));
+                        await refetch();
+                      });
+                  },
+                });
+              }}
             />
             <Campo
               label={t("Marca")}
@@ -198,6 +228,29 @@ export function AssistenteAvaliacaoClient({ id }: { id: string }) {
               value={String(veiculo.versao ?? "")}
               disabled={concluida}
               onChange={(v) => void persist({ veiculo: { ...veiculo, versao: v } })}
+            />
+            <Campo
+              label={t("Ano de fabricação")}
+              value={veiculo.ano_fabricacao != null ? String(veiculo.ano_fabricacao) : ""}
+              disabled={concluida}
+              onChange={(v) =>
+                void persist({
+                  veiculo: {
+                    ...veiculo,
+                    ano_fabricacao: v.trim() ? Number(v) : null,
+                  },
+                })
+              }
+            />
+            <Campo
+              label={t("Ano modelo")}
+              value={veiculo.ano_modelo != null ? String(veiculo.ano_modelo) : ""}
+              disabled={concluida}
+              onChange={(v) =>
+                void persist({
+                  veiculo: { ...veiculo, ano_modelo: v.trim() ? Number(v) : null },
+                })
+              }
             />
             <Campo
               label={t("Km atual")}
@@ -425,5 +478,55 @@ function Campo({
         }}
       />
     </label>
+  );
+}
+
+function CampoPlacaComConsulta({
+  value,
+  disabled,
+  consultando,
+  rotuloPlaca,
+  rotuloBotao,
+  onChangePlaca,
+  onConsultar,
+}: {
+  value: string;
+  disabled?: boolean;
+  consultando: boolean;
+  rotuloPlaca: string;
+  rotuloBotao: string;
+  onChangePlaca: (placa: string) => void;
+  onConsultar: (placa: string) => void;
+}) {
+  const [local, setLocal] = useState(value);
+  useEffect(() => setLocal(value), [value]);
+  return (
+    <div className="space-y-1 text-sm">
+      <span>{rotuloPlaca}</span>
+      <div className="flex gap-2">
+        <Input
+          value={local}
+          disabled={disabled}
+          className="flex-1 uppercase"
+          onChange={(e) => setLocal(e.target.value.toUpperCase())}
+          onBlur={() => {
+            if (local !== value) onChangePlaca(local);
+          }}
+        />
+        {!disabled && (
+          <Button
+            type="button"
+            variant="outline"
+            disabled={!local.trim() || consultando}
+            onClick={() => {
+              if (local !== value) onChangePlaca(local);
+              onConsultar(local);
+            }}
+          >
+            {rotuloBotao}
+          </Button>
+        )}
+      </div>
+    </div>
   );
 }

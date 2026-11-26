@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useConsultaPlaca } from "@/hooks/avaliacao/useConsultaPlaca";
 import { useUnidadesAvaliacao } from "@/hooks/avaliacao/useUnidadesAvaliacao";
 import { useT } from "@/hooks/i18n/useT";
 import { apiClient } from "@/lib/api/client";
@@ -15,6 +16,7 @@ export function NovaAvaliacaoClient() {
   const t = useT();
   const router = useRouter();
   const { data: unidades } = useUnidadesAvaliacao();
+  const consultaPlaca = useConsultaPlaca();
   const [pending, setPending] = useState(false);
   const [form, setForm] = useState({
     client_name: "",
@@ -110,28 +112,55 @@ export function NovaAvaliacaoClient() {
           <option value="repasse">{t("Repasse")}</option>
         </select>
       </label>
-      <div className="grid grid-cols-3 gap-2">
-        <label className="space-y-1 text-sm">
+      <div className="space-y-2">
+        <label className="block space-y-1 text-sm">
           <span>{t("Placa")}</span>
-          <Input
-            value={form.placa}
-            onChange={(e) => setForm((f) => ({ ...f, placa: e.target.value }))}
-          />
+          <div className="flex gap-2">
+            <Input
+              className="flex-1 uppercase"
+              value={form.placa}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, placa: e.target.value.toUpperCase() }))
+              }
+            />
+            <Button
+              type="button"
+              variant="outline"
+              disabled={!form.placa.trim() || consultaPlaca.isPending}
+              onClick={() => {
+                consultaPlaca.mutate(form.placa, {
+                  onSuccess: (v) => {
+                    setForm((f) => ({
+                      ...f,
+                      placa: v.placa,
+                      marca: v.marca,
+                      modelo: v.modelo,
+                    }));
+                    toast.success(t("Dados do veículo preenchidos pela placa."));
+                  },
+                });
+              }}
+            >
+              {consultaPlaca.isPending ? t("Consultando…") : t("Consultar placa")}
+            </Button>
+          </div>
         </label>
-        <label className="space-y-1 text-sm">
-          <span>{t("Marca")}</span>
-          <Input
-            value={form.marca}
-            onChange={(e) => setForm((f) => ({ ...f, marca: e.target.value }))}
-          />
-        </label>
-        <label className="space-y-1 text-sm">
-          <span>{t("Modelo")}</span>
-          <Input
-            value={form.modelo}
-            onChange={(e) => setForm((f) => ({ ...f, modelo: e.target.value }))}
-          />
-        </label>
+        <div className="grid grid-cols-2 gap-2">
+          <label className="space-y-1 text-sm">
+            <span>{t("Marca")}</span>
+            <Input
+              value={form.marca}
+              onChange={(e) => setForm((f) => ({ ...f, marca: e.target.value }))}
+            />
+          </label>
+          <label className="space-y-1 text-sm">
+            <span>{t("Modelo")}</span>
+            <Input
+              value={form.modelo}
+              onChange={(e) => setForm((f) => ({ ...f, modelo: e.target.value }))}
+            />
+          </label>
+        </div>
       </div>
 
       <Button

@@ -15751,6 +15751,12 @@ export const DICIONARIO: Traducoes = {
   "Atendente (opcional)": { es: "Asesor (opcional)" },
   Opcional: { es: "Opcional" },
   Placa: { es: "Placa" },
+  "Consultar placa": { es: "Consultar placa" },
+  "Dados do veículo preenchidos pela placa.": {
+    es: "Datos del vehículo rellenados por la placa.",
+  },
+  "Ano de fabricação": { es: "Año de fabricación" },
+  "Ano modelo": { es: "Año modelo" },
   "Agendamento atualizado.": { es: "Cita actualizada." },
   "Nome, placa ou modelo": { es: "Nombre, placa o modelo" },
   Agendado: { es: "Agendado" },
